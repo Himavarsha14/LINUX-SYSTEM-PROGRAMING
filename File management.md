@@ -49,3 +49,33 @@ int main()
         printf("Read content: %s",buf);
 }
 ```
+## 2.Develop a C program to open an existing text file and display its contents
+```c
+#include<stdio.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<fcntl.h>
+void main()
+{
+        int fd,ret;
+        char buf[65];
+        fd=open("file.txt",O_RDONLY);
+        if(fd<0)
+        {
+                printf("Failed to open the file\n");
+                return;
+        }
+        ret=read(fd,buf,64);
+        if(ret<0)
+        {
+                printf("Failed to read the file\n");
+                close(fd);
+                return;
+        }
+        buf[ret]='\0';
+        printf("%s\n",buf);
+        close(fd);
+        return;
+}
+```
+
