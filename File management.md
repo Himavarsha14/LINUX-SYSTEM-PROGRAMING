@@ -78,4 +78,17 @@ void main()
         return;
 }
 ```
+## 3.Implement a C program to create a new directory named "Test" int the current directory.
+```c
+#include<stdio.h>
+#include<unistd.h>
+int main()
+{
+        char *args[]={"mkdir","Test",NULL};
+        execv("/bin/mkdir",args);
+        perror("execv failed\n");
+        return 0;
+}
+```
+
 
