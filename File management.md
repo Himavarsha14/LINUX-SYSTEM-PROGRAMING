@@ -90,5 +90,70 @@ int main()
         return 0;
 }
 ```
+## 4.Write a C program to check if a file named "sample.txt" exists in the current directory.
+```c
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+int main()
+{
+        int fd;
+        fd=open("sample.txt",O_RDONLY);
+        if(fd==-1)
+        {
+                printf("File 'sample.txt' does not exist.\n");
+        }
+        else
+        {
+                printf("File 'sample.txt' exists.\n");
+                close(fd);
+        }
+        return 0;
+}
+```
+## 5.Write a C program to rename file.
+```c
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+int main()
+{
+        if(rename("hello.c","helloworld.c")==0)
+        {
+                printf("File renamed successfully.\n");
+        }
+        else
+        {
+                printf("Error renaming file.");
+
+
+        }
+        return 0;
+}
+```
+## 6.Implement a C program to delete a file.
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+int main()
+{
+        if(unlink("file.txt")==0)
+        {
+                printf("File deleted successfully.\n");
+        }
+        else
+        {
+                printf("File deletion failed.\n");
+        }
+        return 0;
+}
+```
+## 7.Implement a C program to copy the contents of one file to another.
+```c
+
+
+
+
 
 
