@@ -151,6 +151,37 @@ int main()
 ```
 ## 7.Implement a C program to copy the contents of one file to another.
 ```c
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<stdlib.h>
+int main()
+{
+        int src,dest;
+        char buf[24];
+        int n;
+
+        src=open("hello.txt",O_RDONLY);
+        if(src<0)
+        {
+                printf("Failed to open.\n");
+        }
+        dest=open("file.txt",O_WRONLY | O_CREAT |O_TRUNC,0644);
+        if(dest==-1)
+        {
+                printf("Error opening destination file.\n");
+                close(src);
+        }
+        while((n=read(src,buf,sizeof(buf)))>0)
+                {
+                        write(dest,buf,n);
+                }
+        printf("File copied successfuly\n");
+        close(src);
+        close(dest);
+        return 0;
+}
+```
 
 
 
