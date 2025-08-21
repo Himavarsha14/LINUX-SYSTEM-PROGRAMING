@@ -182,6 +182,49 @@ int main()
         return 0;
 }
 ```
+## 8.C program to move a file from one directory to another
+```c
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+int main()
+{
+        if(rename("hello.txt","/home/Himavarsha/linux/file.txt")==0)
+                printf("File moved successfully.\n");
+        else
+                printf("Error moving file.\n");
+        return 0;
+}
+```
+## 9.Program to list all files in the current directory
+```c
+#include<stdio.h>
+#include<sys/types.h>
+void main()
+{
+        printf("This is a program to implement list all files in current directory.\n");
+        execl("/bin/ls","ls",NULL);
+        printf("This print never appears\n");
+}
+```
+## 10.Program to get the size of the file
+```c
+#include<stdio.h>
+#include<sys/stat.h>
+int main()
+{
+        struct stat st;
+        if(stat("file.txt",&st)==0)
+        {
+                printf("size of file.txt=%ld bytes\n",st.st_size);
+        }
+        else
+        {
+                printf("Error getting file size.\n");
+        }
+        return 0;
+}
+```
 
 
 
