@@ -225,9 +225,216 @@ int main()
         return 0;
 }
 ```
+## 11.Program to check if a directory "Test" exists
+```c
+#include <stdio.h>
+#include <sys/stat.h>
+
+int main() {
+    struct stat st;
+    if (stat("Test", &st) == 0 && S_ISDIR(st.st_mode))
+        printf("Directory 'Test' exists\n");
+    else
+        printf("Directory 'Test' does not exist\n");
+    return 0;
+}
+```
+## 12.Program to create a new directory "Backup" in parent directory
+```c
+#include <stdio.h>
+#include <sys/stat.h>
+
+int main() {
+    if (mkdir("../Backup", 0755) == 0)
+        printf("Directory 'Backup' created in parent\n");
+    else
+        perror("mkdir");
+    return 0;
+}
+```
+## 13.Program to recursively list all files and directories in a given directory
+```c
+#include <stdio.h>
+#include <dirent.h>
+#include <string.h>
+#include <sys/stat.h>
+
+void listDir(const char *path) {
+    DIR *dir = opendir(path);
+    if (!dir) return;
+
+    struct dirent *e;
+    while ((e = readdir(dir)) != NULL) {
+        if (strcmp(e->d_name, ".") == 0 || strcmp(e->d_name, "..") == 0)
+            continue;
+
+        char full[1024];
+        snprintf(full, sizeof(full), "%s/%s", path, e->d_name);
+        printf("%s\n", full);
+
+        struct stat st;
+        if (stat(full, &st) == 0 && S_ISDIR(st.st_mode))
+            listDir(full);
+    }
+    closedir(dir);
+}
+
+int main() {
+    listDir(".");
+    return 0;
+}
+```
+## 14.Program to delete all files in the directory temp
+```c
+#include <stdio.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <string.h>
 
 
+int main() {
+DIR *dir = opendir("Temp");
+struct dirent *dp;
+char filepath[1024];
 
+
+if (!dir) {
+perror("opendir");
+return 1;
+}
+
+
+while ((dp = readdir(dir)) != NULL) {
+if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
+continue;
+
+
+snprintf(filepath, sizeof(filepath), "Temp/%s", dp->d_name);
+if (unlink(filepath) == 0)
+printf("Deleted: %s\n", filepath);
+else
+perror("unlink");
+}
+closedir(dir);
+return 0;
+}
+```
+## 15.Program to Count number of lines in a file data.txt
+```c
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int main() {
+    int fd = open("file.c", O_RDONLY);
+    if (fd < 0)
+    {
+            printf("Error opening file.\n");
+            return 1;
+    }
+    char buf[1024];
+    int n, lines = 0;
+    while ((n = read(fd, buf, sizeof(buf))) > 0) {
+        for (int i = 0; i < n; i++)
+        {
+            if (buf[i] == '\n')
+            {
+                    lines++;
+            }
+        }
+    }
+    close(fd);
+    printf("Lines: %d\n", lines);
+    return 0;
+}
+```
+## 16.Program to Append "Goodbye!" to "message.txt"
+```c
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+
+int main() {
+    int fd = open("helloworld.txt", O_WRONLY | O_APPEND | O_CREAT,0666);
+    if (fd < 0) { perror("open"); return 1; }
+
+    write(fd, "Goodbye!\n", strlen("Goodbye!\n"));
+    close(fd);
+    return 0;
+}
+```
+## 17.Program to change file permissions to read only mode
+```c
+#include <stdio.h>
+#include <sys/stat.h>
+
+int main() {
+    if (chmod("file.txt", 0444) == 0)
+        printf("Permissions changed to read-only\n");
+    else
+        perror("chmod");
+    return 0;
+}
+```
+## 18.Program to Change ownership of the file
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+int main() {
+    struct passwd *pw = getpwnam("user1");
+    if (!pw) { printf("User not found\n"); return 1; }
+
+    if (chown("file.txt", pw->pw_uid, pw->pw_gid) == 0)
+        printf("Owner changed\n");
+    else
+        perror("chown");
+    return 0;
+}
+```
+## 19.Program to get last modified time stamp
+```c
+#include <stdio.h>
+#include <sys/stat.h>
+#include <time.h>
+
+int main() {
+    struct stat st;
+    if (stat("file.txt", &st) == 0) {
+        printf("Last modified: %s", ctime(&st.st_mtime));
+    } else {
+        perror("stat");
+    }
+    return 0;
+}
+```
+## 20.Program to create temporary file and write data
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+int main() {
+    char tempName[] = "/tmp/tempfileXXXXXX";   // template for mkstemp
+    int fd = mkstemp(tempName);                // create unique temp file
+
+    if (fd < 0) {
+        perror("Failed to create temp file");
+        return 1;
+    }
+
+    char data[] = "This is temporary data\n";
+    write(fd, data, strlen(data));             // write data to file
+
+    printf("Temporary file created: %s\n", tempName);
+
+    close(fd);                                 // close file
+    return 0;
+}
+```
 
 
 
