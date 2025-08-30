@@ -58,7 +58,7 @@ The exec() family of functions in process management is used to replace the curr
 void main()
 {
    printf("This is an example of execvp\n");
-   char *args={"ls","-l",NULL};
+   char *args[]={"ls","-l",NULL};
    execvp("ls",args);
    printf("This print never appears\n");
 }
