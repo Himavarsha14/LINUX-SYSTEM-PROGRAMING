@@ -435,6 +435,27 @@ int main() {
     return 0;
 }
 ```
+## 21.C program to create new file and write hello world! to it.
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+#include<string.h>
+int main()
+{
+        int fd;
+        fd=open("filefile.txt",O_RDONLY|O_WRONLY|O_CREAT,0666);
+        if(fd<0)
+        {
+                printf("Failed to open file\n");
+                return 1;
+        }
+        write(fd,"Hello world!",strlen("Hello world!"));
+        close(fd);
+        return 0;
+}
+```
+
 
 
 
