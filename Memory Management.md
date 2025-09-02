@@ -89,4 +89,7 @@ int main()
         return 0;
 }
 ```
+## 4.What is memory management in system programming?
+- Memory management is the process of efficiently handling the computer’s memory resources. In system programming, it involves allocating memory to processes, keeping track of which parts of memory are in use, and freeing memory when it is no longer needed. It ensures that multiple programs can run smoothly without interfering with each other, preventing memory leaks and crashes.
+
 
