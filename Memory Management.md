@@ -147,3 +147,89 @@ The OS maps pages to frames using a page table, avoiding external fragmentation.
 ## 17.Define Memory Management
 - Memory management is the process of controlling and coordinating computer memory, including allocation, deallocation, protection, and efficient utilization of both physical and virtual memory.
 
+## 18.Explain the role of MMU in memory management.
+- The Memory Management Unit is a hardware component responisble for all handling memory and address translations between virtual addresses used by programs and physical adress in RAM.Its key role inclue:
+- Translating virtual addresses to physical addresses.
+- enforcing memory protection and access permissions
+- Supporting virtual memory by enabling paging and segmentation.
+- Handling page faults and triggering interrupts when needed.
+
+## 19.Describe the translation lookaside buffer (TLB).
+- A TLB is a small, fast cache inside the MMU that stores recent virtual-to-physival address translations.It seepds up memory access by avoiding the need to traverse the page table for every memory reference.
+
+## 20.What is TLB Miss? How Is It Handled?
+- A TLB miss occurs when the requested vitual address is present in TLB.
+## Handling:
+- The MMU searches the page table for the address translation.
+- If found,the translation is loaded into the TLB for future use.
+- If the page is not in memory, a page fault occurs and the operating system loads the page from the secondary storage.
+
+## 21.Discuss the working principle of MMU.
+The MMU works as follows:
+- The CPU generates a virtual address.
+- MMU check the TLB for the translation
+    - If found->physical address is used directly.
+    - If not found->page table is consulted.
+- The MMU enforces access permissions (read/write/execute).
+- If a page is missing->page fauly is triggered and OS handles it.
+
+## 22.Address translation in MMU?
+Address translation is the process of converting a programs's virtual address to a physical address using:
+- Segmentation:Divides memory into segments(code, data, stack).
+- Paging:Divided memory into fixed-size pages mapped to frames.
+- TLB:Speeds up translation by caching recent mappings.
+
+## 23.How does MMU support virtual memory?
+The MMU supports virtual memory by:
+- Allowing programs to use addresses larger than physical memory.
+- Using paging or segmentation to map virtual addresses to physical memory.
+- Handling page faults when pages are not in RAM and swapping them in from    disk.
+
+## 24.Describe the process of page table traversal in MMU.
+When a virtual address is not in the TLB:
+- MMU consults the page table stored in memory.
+- The virtual page number is used as an index.
+- The corresponding physical frame number is retrieved.
+- The full physical address is formed using the frame number+page offset.
+
+## 25.What is page fault handling in MMU?
+A page fault occurs when the requested page is not in RAM.
+Steps for handling:
+- CPU triggers a page fault interrupt.
+- OS identifies the required page on disk.
+- OS loads the page into a free frame (or replaces a page using a replacement algorithm).
+- Page table is updates and execution resumes.
+
+## 26.Explain the page replacement algorithms used in MMU.
+When memory is full and a new page needs to be loaded, the MMU uses page replacement algorithms to decide which page to evict.Common Algorithms:
+- FIFO (Fisrt-In-First-Out)
+- LRU(Least Recently Used)
+- Optimal Page Replacement
+- Clock Algorithm
+
+## 27.Define page replacement algorithms.
+- Page replacement algorithms determine which page to remove from memory when a page fault occurs, aiming to minimize future page faults and optimize memory usage.
+
+## 28.Describe the FIFO page replacement algorithm.
+FIFO(First-In-First-Out):
+- Evicts the oldest page in memory when a new page is needed.
+- Simple to implemet using a queue
+- Limitation:May remove frequently used pages leading to Bleady's anomaly.
+
+## 29.Explain the LRU (Least Recently Used) page replacement algorithm.
+The Least Recently Used (LRU) page replacement algorithm replaces the page that has not been used for the longest time.
+- Assumption: Pages used recently will likely be used again soon, and those not used for a long time are less likely to be accessed.
+- Implementation methods:
+     - Counter-based: keep a timestamp for each page and replace the one                           with oldest timestamp.
+     - Stack-based: Keep pages in a stack; When accessed, move the page to the top,the bottom page is replaced.
+
+## 30.Explain Clock page replacement algorithm
+The clock algorithm is an efficient approximation of LRU.
+- Pages are arranges in a circular list(like a clock).
+- Each page has a reference bit(0 or 1).
+- A "clock hand" pointer moves around the circle:
+      - If the page's reference bit is 0,it is replaced.
+      - If the reference bit is 1,it is cleared to 0 and the hand moves forward.
+- This continues unitll a page with reference bit=0 is found.
+
+
