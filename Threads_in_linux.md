@@ -151,33 +151,30 @@ int main()
 ## 6.Write a program to create a thread that prints sum of two numbers.
 ```c
 #include<stdio.h>
-#include<stdlib.h>
 #include<pthread.h>
+#include<unistd.h>
+#include<stdlib.h>
 struct numbers
 {
         int a;
         int b;
 };
-void *sum(void *args)
+void *add(void *args)
 {
-        struct numbers *nums=(struct numbers*)args;
+        struct numbers *nums=(struct numbers *)args;
         int sum=nums->a+nums->b;
-        int *result =(int *)malloc(sizeof(int));
-        *result=sum;
-        return result;
+        printf("sum of %d and %d is: %d\n",nums->a,nums->b,sum);
+        return NULL;
 }
 int main()
 {
         pthread_t t1;
-        struct numbers nums;
-        printf("Numbers to add:\n");
-        scanf("%d %d",&nums.a,&nums.b);
-        void *res;
-        pthread_create(&t1,NULL,sum,&nums);
-        pthread_join(t1,&res);
-        int *sumoftwo=(int *)res;
-        printf("The sum of %d and %d is:%d\n",nums.a,nums.b,*sumoftwo);
-        return 0;
+        struct numbers *n=malloc(sizeof(struct numbers));
+        n->a=10;
+        n->b=20;
+        pthread_create(&t1,NULL,add,n);
+        pthread_join(t1,NULL);
+        free(n);
 }
 ```
 ## 7.Implement a C programs that creates a thread that prints square of a number.
@@ -320,6 +317,129 @@ int main() {
     return 0;
 }
 ```
+## 11.Write a C program to create a thread that prints Hello world with thread synchronisation.
+```c
+#include<stdio.h>
+#include<pthread.h>
+pthread_mutex_t mtx;
+void *thread(void *arg)
+{
+        pthread_mutex_lock(&mtx);
+        printf("Hello world\n");
+        pthread_mutex_unlock(&mtx);
+        return NULL;
+}
+void main()
+{
+        pthread_t t1;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,thread,NULL);
+        pthread_join(t1,NULL);
+        pthread_mutex_destroy(&mtx);
+}
+```
+## 12.Develop a C program that creates two threads that prints their IDs and synchronize their outputs.
+```c
+#include<stdio.h>
+#include<pthread.h>
+pthread_mutex_t mtx;
+void *thread1(void *args)
+{
+        pthread_mutex_lock (&mtx);
+        printf("Hello\n");
+        pthread_mutex_unlock(&mtx);
+        return NULL;
+}
+void *thread2(void *args)
+{
+        pthread_mutex_lock(&mtx);
+        printf("World\n");
+        pthread_mutex_unlock(&mtx);
+        return NULL;
+}
+void main()
+{
+        pthread_t t1,t2;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,thread1,NULL);
+        pthread_create(&t2,NULL,thread2,NULL);
+        printf("First thread identifier: %lu\n",t1);
+        printf("Second thread identifier: %lu\n",t2);
+        pthread_join(t1,NULL);
+        pthread_join(t2,NULL);
+        pthread_mutex_destroy(&mtx);
+}
+```
+## 13.Implement a C program to create a thread that generates random numbers and synchronizes access to a shared buffer.
+```c
+#include<stdio.h>
+#include<pthread.h>
+#include<unistd.h>
+#include<stdlib.h>
+#include<time.h>
+#define SIZE 10
+int buff[SIZE];
+int k=0;
+pthread_mutex_t mtx;
+void *thread(void *arg)
+{
+        srand(time(NULL));
+        for(int i=0;i<SIZE;i++)
+        {
+                pthread_mutex_lock(&mtx);
+                int num=rand()%100;
+                buff[k++]=num;
+                printf("%d\n",num);
+                pthread_mutex_unlock(&mtx);
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,thread,NULL);
+        pthread_join(t1,NULL);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
+## 14.Write a C program to create a thread that performs addition of two numbers with mutex locks?
+```c
+#include<stdio.h>
+#include<pthread.h>
+#include<unistd.h>
+#include<stdlib.h>
+struct numbers
+{
+        int a;
+        int b;
+};
+pthread_mutex_t mtx;
+void *add(void *args)
+{
+        struct numbers *nums=(struct numbers *)args;
+        pthread_mutex_lock(&mtx);
+        int sum=nums->a+nums->b;
+        printf("sum of %d and %d is: %d\n",nums->a,nums->b,sum);
+        pthread_mutex_unlock(&mtx);
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        struct numbers *n=malloc(sizeof(struct numbers));
+        n->a=10;
+        n->b=20;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,add,n);
+        pthread_join(t1,NULL);
+        pthread_mutex_destroy(&mtx);
+        free(n);
+}
+```
+
+
 
 
 
