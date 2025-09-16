@@ -438,7 +438,46 @@ int main()
         free(n);
 }
 ```
-
+## 15.Implement a C program to create two threads that increment and decrement a shared variable,respectively,using mutex locks?
+```c
+#include<stdio.h>
+#include<pthread.h>
+int sh_var=0;
+pthread_mutex_t mtx;
+void *thread1(void *args)
+{
+        int i=0;
+        for(i=0;i<5;i++)
+        {
+                pthread_mutex_lock(&mtx);
+                sh_var++;
+                printf("the shared variable in incrementing thread:%d\n",sh_var);
+                pthread_mutex_unlock(&mtx);
+        }
+}
+void *thread2(void *args)
+{
+        int i=0;
+        for(i=0;i<5;i++)
+        {
+                pthread_mutex_lock(&mtx);
+                sh_var--;
+                printf("The shared variable in decrementing thread:%d\n",sh_var);
+                pthread_mutex_unlock(&mtx);
+        }
+}
+int main()
+{
+        pthread_t t1,t2;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,thread1,NULL);
+        pthread_create(&t2,NULL,thread2,NULL);
+        pthread_join(t1,NULL);
+        pthread_join(t2,NULL);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
 
 
 
