@@ -478,7 +478,68 @@ int main()
         return 0;
 }
 ```
-
-
-
+## 16.Develop a C program to create two threads that reads input from the user and synchronizes access to shared resources?
+```c
+#include<stdio.h>
+#include<pthread.h>
+pthread_mutex_t mtx;
+char str[100];
+void *userinput(void *args)
+{
+        pthread_mutex_lock(&mtx);
+        printf("Enter input:\n");
+        fgets(str,100,stdin);
+        printf("user input:%s",str);
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,userinput,NULL);
+        pthread_join(t1,NULL);
+        printf("User given input in mainthread:%s",str);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
+## 17.Implement a C program to create a thread that prints prime numbers up to a given limit with mutex locks
+```c
+#include<stdio.h>
+#include<pthread.h>
+#include<math.h>
+pthread_mutex_t mtx;
+void *prime(void *args)
+{
+        printf("The prime numbers in the range are:\n");
+        for(int n=2;n<10;n++)
+        {
+                int count=0;
+                for(int i=2;i<=n/2;i++)
+                {
+                        if(n%i==0)
+                        {
+                                count++;
+                                break;
+                        }
+                }
+                if(count==0)
+                {
+                        pthread_mutex_lock(&mtx);
+                        printf("%d\n",n);
+                        pthread_mutex_unlock(&mtx);
+                }
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,prime,NULL);
+        pthread_join(t1,NULL);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
 
