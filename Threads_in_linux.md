@@ -957,7 +957,106 @@ int main() {
     return 0;
 }
 ```
+## 29.Develop a C program that calculates the average of numbers from 1 to 100.
+```c
+#include <stdio.h>
+#include <pthread.h>
 
+void *calculate_average(void *args) {
+    int sum = 0;
+    for (int i = 1; i <= 100; i++) {
+        sum += i;
+    }
+
+    double average = sum / 100.0;  // divide by total count
+    printf("Average of numbers from 1 to 100 is: %.2lf\n", average);
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, calculate_average, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 30.Write a C program to create a thread that generates a random string.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#include <string.h>
+
+void *generate_random_string(void *args) {
+    int length;
+    printf("Enter the length of the random string: ");
+    scanf("%d", &length);
+
+    char str[length + 1];
+    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    srand(time(NULL));
+
+    for (int i = 0; i < length; i++) {
+        int key = rand() % (int)(sizeof(charset) - 1);
+        str[i] = charset[key];
+    }
+    str[length] = '\0';
+
+    printf("Random string: %s\n", str);
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, generate_random_string, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 31.Write a C program to create a thread that checks if a given number is a perfect square.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *perfect_square(void *args)
+{
+        int n;
+        scanf("%d",&n);
+        int is_perfect=0;
+        for(int i=1;i*i<=n;i++)
+        {
+                if(i*i==n)
+                {
+                        is_perfect=1;
+                        break;
+                }
+        }
+        if(is_perfect)
+        {
+                printf("The given number is a perfect square\n");
+        }
+        else
+        {
+                printf("The given number is not a perfect square\n");
+        }
+        return 0;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_create(&t1,NULL,perfect_square,NULL);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 
 
 
 
