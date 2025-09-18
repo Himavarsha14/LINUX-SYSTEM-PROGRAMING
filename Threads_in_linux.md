@@ -542,4 +542,423 @@ int main()
         return 0;
 }
 ```
+## 18.Implement a C program to create a thread that calculates the sum of Fibonacci series up to a given limit using dynamic programming with mutex locks.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+pthread_mutex_t mtx;
+int *fibs;
+size_t count = 0;
+size_t capacity = 10;
+int sum = 0;
+int limit = 10;
+
+void *range_fib(void *args)
+{
+    int a = 0, b = 1, c;
+    fibs = malloc(capacity * sizeof(int));
+    if (!fibs) {
+        printf("Malloc error\n");
+        return NULL;
+    }
+
+    while (a <= limit) {
+        if (count == capacity) {
+            capacity *= 2;
+            fibs = realloc(fibs, capacity * sizeof(int));
+            if (!fibs) {
+                printf("Realloc error\n");
+                return NULL;
+            }
+        }
+        pthread_mutex_lock(&mtx);
+        fibs[count++] = a;
+        sum += a;
+        pthread_mutex_unlock(&mtx);
+
+        c = a + b;
+        a = b;
+        b = c;
+    }
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1;
+    pthread_mutex_init(&mtx, NULL);
+
+    pthread_create(&t1, NULL, range_fib, NULL);
+    pthread_join(t1, NULL);
+
+    printf("Fibonacci numbers up to %d: ", limit);
+    for (size_t i = 0; i < count; i++) {
+        printf("%d ", fibs[i]);
+    }
+    printf("\nFinal sum = %d\n", sum);
+
+    pthread_mutex_destroy(&mtx);
+    free(fibs);
+    return 0;
+}
+```
+## 19.Write a C program to create a thread that checks if a given year is a leap year using dynamic programming with mutex locks.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+pthread_mutex_t mtx;
+void *leap_year(void *args)
+{
+    int *year = malloc(sizeof(int));
+    if (!year) {
+        printf("Malloc error\n");
+        return NULL;
+    }
+    *year = *(int *)args;
+    int is_leap = (*year % 400 == 0) || ((*year % 100 != 0) && (*year % 4 == 0));
+    pthread_mutex_lock(&mtx);
+    printf("%d is %s leap year.\n", *year, is_leap ? "a" : "not a");
+    pthread_mutex_unlock(&mtx);
+    free(year);
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1;
+    int in_year;
+    printf("Enter a year: ");
+    scanf("%d", &in_year);
+    pthread_mutex_init(&mtx, NULL);
+    pthread_create(&t1, NULL, leap_year, &in_year);
+    pthread_join(t1, NULL);
+
+    pthread_mutex_destroy(&mtx);
+    return 0;
+}
+```
+## 20.Write a C program to create a thread that checks if a string is palindrome using dynamic programming with mutex locks?
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <pthread.h>
+pthread_mutex_t mtx;
+void *check_palindrome(void *args) {
+    char *str = malloc(100 * sizeof(char));
+    if (!str) {
+        printf("Malloc error\n");
+        return NULL;
+    }
+    printf("Enter a string: ");
+    scanf("%s", str);
+
+    int n = strlen(str);
+    int is_palindrome = 1;
+
+    for (int i = 0; i < n / 2; i++) {
+        if (str[i] != str[n - i - 1]) {
+            is_palindrome = 0;
+            break;
+        }
+    }
+    pthread_mutex_lock(&mtx);
+    if (is_palindrome)
+        printf("\"%s\" is a palindrome.\n", str);
+    else
+        printf("\"%s\" is not a palindrome.\n", str);
+    pthread_mutex_unlock(&mtx);
+
+    free(str);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_mutex_init(&mtx, NULL);
+    pthread_create(&t1, NULL, check_palindrome, NULL);
+    pthread_join(t1, NULL);
+
+    pthread_mutex_destroy(&mtx);
+    return 0;
+}
+```
+## 21.Implement a C program to create a thread that performs selection sort on an array of integers.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *sort(void *args)
+{
+        printf("enter number of elements:\n");
+        int size;
+        int i,j;
+        scanf("%d",&size);
+        int arr[size];
+        printf("Enter elements of an array:\n");
+        for(i=0;i<size;i++)
+        {
+                scanf("%d",&arr[i]);
+        }
+        for(i=0;i<size;i++)
+        {
+                int min=i;
+                for(j=i+1;j<size;j++)
+                {
+                        if(arr[j]<arr[min])
+                        {
+                                min=j;
+                        }
+                }
+                int temp=arr[i];
+                arr[i]=arr[min];
+                arr[min]=temp;
+        }
+        printf("Sorted array:");
+        for(int i=0;i<size;i++)
+        {
+                printf("%d ",arr[i]);
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_create(&t1,NULL,sort,NULL);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 22.Develop a C to create a thread that calculates area of a triangle.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *area_of_triangle(void *args)
+{
+        double height,breadth;
+        printf("Enter height and breadth of a triangle:\n");
+        scanf("%lf %lf",&height,&breadth);
+        double area=0.5*height*breadth;
+        printf("The area of the triangle is:%.2lf\n",area);
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_create(&t1,NULL,area_of_triangle,NULL);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 23.Write a C program to create a thread that calculates the sum of squares of numbers from 1 to 100.
+```c
+#include <stdio.h>
+#include <pthread.h>
+void *sum_of_squares(void *args) {
+    int sum = 0;
+    for (int i = 1; i <= 100; i++) {
+        sum += i * i;
+    }
+    printf("Sum of squares from 1 to 100 is: %d\n", sum);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, sum_of_squares, NULL);
+    pthread_join(t1, NULL);
+    return 0;
+}
+```
+## 24.Write a C program to create a thread that generated a random array of numbers.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+
+void *generate_random_array(void *args) {
+    int n;
+    printf("Enter the size of the array: ");
+    scanf("%d", &n);
+    int arr[n];
+    srand(time(NULL));
+
+    printf("Random array: ");
+    for (int i = 0; i < n; i++) {
+        arr[i] = rand() % 100; // random number between 0-99
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+    return NULL;
+}
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, generate_random_array, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 25.Implement a C program to create a thread that performs bubble sortt on an array of integers.
+```c
+oid *bubble_sort(void *args) {
+    int n;
+    printf("Enter the size of the array: ");
+    scanf("%d", &n);
+
+    int arr[n];
+    printf("Enter %d elements: ", n);
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+    printf("Sorted array: ");
+    for (int i = 0; i < n; i++)
+        printf("%d ", arr[i]);
+    printf("\n");
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, bubble_sort, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 26.Develop a C program to create a thread that calculates greatest common divisor(GCD) of two numbers?
+```c
+#include <stdio.h>
+#include <pthread.h>
+void *calculate_gcd(void *args) {
+    int a, b;
+    printf("Enter two numbers: ");
+    scanf("%d %d", &a, &b);
+
+    int x = a, y = b;
+    while (y != 0) {
+        int temp = y;
+        y = x % y;
+        x = temp;
+    }
+
+    printf("GCD of %d and %d is: %d\n", a, b, x);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, calculate_gcd, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 27.Implement a C program that calculates sum of even numbers from 1 to 100.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+void *sum_of_even(void *args) {
+    int sum = 0;
+    for (int i = 2; i <= 100; i += 2) {
+        sum += i;
+    }
+
+    printf("Sum of even numbers from 1 to 100 is: %d\n", sum);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, sum_of_even, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 28.Implement a C program that performs multiplication of two matrices.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+void *matrix_multiply(void *args) {
+    int r1, c1, r2, c2;
+
+    printf("Enter rows and columns of first matrix: ");
+    scanf("%d %d", &r1, &c1);
+    printf("Enter rows and columns of second matrix: ");
+    scanf("%d %d", &r2, &c2);
+
+    if (c1 != r2) {
+        printf("Matrix multiplication not possible! Columns of first must equal rows of second.\n");
+        return NULL;
+    }
+
+    int mat1[r1][c1], mat2[r2][c2], result[r1][c2];
+
+    printf("Enter elements of first matrix:\n");
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c1; j++)
+            scanf("%d", &mat1[i][j]);
+
+    printf("Enter elements of second matrix:\n");
+    for (int i = 0; i < r2; i++)
+        for (int j = 0; j < c2; j++)
+            scanf("%d", &mat2[i][j]);
+
+    // Initialize result matrix to 0
+    for (int i = 0; i < r1; i++)
+        for (int j = 0; j < c2; j++)
+            result[i][j] = 0;
+
+    // Matrix multiplication
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++) {
+            for (int k = 0; k < c1; k++) {
+                result[i][j] += mat1[i][k] * mat2[k][j];
+            }
+        }
+    }
+
+    // Print result
+    printf("Resultant matrix:\n");
+    for (int i = 0; i < r1; i++) {
+        for (int j = 0; j < c2; j++)
+            printf("%d ", result[i][j]);
+        printf("\n");
+    }
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+
+    pthread_create(&t1, NULL, matrix_multiply, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+
+
+
+
 
