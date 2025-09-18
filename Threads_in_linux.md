@@ -1056,7 +1056,322 @@ int main()
         return 0;
 }
 ```
-## 
+## 32.Write a C program to calculate the sum of digits of a given number.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *sum_of_digits(void *args)
+{
+        int num=*(int *)args;
+        int sum=0;
+        while(num)
+        {
+                int rem=num%10;
+                sum=sum+rem;
+                num=num/10;
+        }
+        printf("The sum of digits are:%d\n",sum);
+        return 0;
+}
+int main()
+{
+        pthread_t t1;
+        int n;
+        printf("Enter a number:\n");
+        scanf("%d",&n);
+        pthread_create(&t1,NULL,sum_of_digits,&n);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 33.Implement a C program to create a thread that calculates the factorial of a given number using recursion
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+int max_value;
+int n;
+void *find_max(void *args)
+{
+    int *arr = (int *)args;
+    max_value = arr[0];
+
+    for (int i = 1; i < n; i++)
+    {
+        if (arr[i] > max_value)
+            max_value = arr[i];
+    }
+    return NULL;
+}
+int main()
+{
+    pthread_t t1;
+
+    printf("Enter size of array: ");
+    scanf("%d", &n);
+
+    int arr[n];
+    printf("Enter %d elements:\n", n);
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    pthread_create(&t1, NULL, find_max, arr);
+    pthread_join(t1, NULL);
+
+    printf("Maximum element = %d\n", max_value);
+    return 0;
+}
+```
+## 34.Develop a C program to create a thread that finds the maximum element in an array.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+int max_value;
+int n;
+void *find_max(void *args)
+{
+    int *arr = (int *)args;
+    max_value = arr[0];
+
+    for (int i = 1; i < n; i++)
+    {
+        if (arr[i] > max_value)
+            max_value = arr[i];
+    }
+    return NULL;
+}
+int main()
+{
+    pthread_t t1;
+
+    printf("Enter size of array: ");
+    scanf("%d", &n);
+
+    int arr[n];
+    printf("Enter %d elements:\n", n);
+    for (int i = 0; i < n; i++)
+        scanf("%d", &arr[i]);
+
+    pthread_create(&t1, NULL, find_max, arr);
+    pthread_join(t1, NULL);
+
+    printf("Maximum element = %d\n", max_value);
+    return 0;
+}
+```
+## 35.Write a C program That sorts an array of strings.
+```c
+#include<stdio.h>
+#include<pthread.h>
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+    int n;
+    printf("Enter number of strings: ");
+    scanf("%d", &n);
+    char arr[n][100];
+    printf("Enter %d strings:\n", n);
+    for (int i = 0; i < n; i++)
+    {
+        scanf("%s", arr[i]);
+    }
+    for (int i = 0; i < n - 1; i++)
+    {
+        for (int j = i + 1; j < n; j++)
+        {
+            if (strcmp(arr[i], arr[j]) > 0)
+            {
+                char temp[100];
+                strcpy(temp, arr[i]);
+                strcpy(arr[i], arr[j]);
+                strcpy(arr[j], temp);
+            }
+        }
+    }
+
+    printf("\nSorted strings:\n");
+    for (int i = 0; i < n; i++)
+    {
+        printf("%s\n", arr[i]);
+    }
+
+    return 0;
+}
+```
+## 36.Write a C program to create a thread that checks if a number is even or odd.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *even_odd(void *args)
+{
+        int num=*(int *)args;
+        if(num%2==0)
+        {
+                printf("%d is an even number\n",num);
+        }
+        else
+        {
+                printf("%d is an odd number\n",num);
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        printf("Enter a number:\n");
+        int n;
+        scanf("%d",&n);
+        pthread_create(&t1,NULL,even_odd,&n);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 37.Implement a C program to create a thread that calculates the average of elements in an array.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+double sum = 0;
+int n;
+
+void *calculate_sum(void *args)
+{
+    double *arr = (double *)args;
+    sum = 0;
+    for (int i = 0; i < n; i++)
+        sum += arr[i];
+    double average=sum/n;
+    printf("Average=%.2lf\n",average);
+    return NULL;
+}
+
+int main()
+{
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+    double arr[n];
+    printf("Enter %d numbers:\n", n);
+    for (int i = 0; i < n; i++)
+        scanf("%lf", &arr[i]);
+    pthread_t t1;
+    pthread_create(&t1, NULL, calculate_sum, arr);
+    pthread_join(t1, NULL);
+    return 0;
+}
+```
+## 38.Write a C program to create a thread that generates a random password.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <time.h>
+#include <string.h>
+
+#define PASSWORD_LENGTH 12  // length of password
+
+char password[PASSWORD_LENGTH + 1];  // global variable to store password
+
+void *generate_password(void *args)
+{
+    const char charset[] = "abcdefghijklmnopqrstuvwxyz"
+                           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                           "0123456789"
+                           "!@#$%^&*()_+-=<>?";
+    int n = sizeof(charset) - 1;  // exclude null character
+
+    for (int i = 0; i < PASSWORD_LENGTH; i++)
+    {
+        int index = rand() % n;   // pick random index
+        password[i] = charset[index];
+    }
+    password[PASSWORD_LENGTH] = '\0';  // null terminate
+
+    return NULL;
+}
+
+int main()
+{
+    srand(time(0));  // seed random number generator
+
+    pthread_t t1;
+    pthread_create(&t1, NULL, generate_password, NULL);
+    pthread_join(t1, NULL);
+
+    printf("Generated Password: %s\n", password);
+
+    return 0;
+}
+```
+## 39.Implement a C program to create a thread that calculates the area of a rectangle.
+```c
+include <stdio.h>
+#include <pthread.h>
+
+void *calculate_area(void *args)
+{
+    double *arr = (double *)args;
+    double area = arr[0] * arr[1];
+    printf("Area of rectangle = %.2lf\n", area);
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1;
+    double arr[2];
+
+    printf("Enter length of rectangle: ");
+    scanf("%lf", &arr[0]);
+
+    printf("Enter width of rectangle: ");
+    scanf("%lf", &arr[1]);
+
+    pthread_create(&t1, NULL, calculate_area, arr);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 40.Develop a c program that creates a thread that calculates the average of a number.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+double sum = 0;
+int n;
+
+void *calculate_sum(void *args)
+{
+    double *arr = (double *)args;
+    sum = 0;
+    for (int i = 0; i < n; i++)
+        sum += arr[i];
+    double average=sum/n;
+    printf("Average=%.2lf\n",average);
+    return NULL;
+}
+
+int main()
+{
+    printf("Enter the number of elements: ");
+    scanf("%d", &n);
+    double arr[n];
+    printf("Enter %d numbers:\n", n);
+    for (int i = 0; i < n; i++)
+        scanf("%lf", &arr[i]);
+    pthread_t t1;
+    pthread_create(&t1, NULL, calculate_sum, arr);
+    pthread_join(t1, NULL);
+    return 0;
+}
+```
+
+
+
+
 
 
 
