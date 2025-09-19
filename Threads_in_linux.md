@@ -1335,7 +1335,7 @@ int main()
     return 0;
 }
 ```
-## 40.Develop a c program that creates a thread that calculates the average of a number.
+## 40.Develop a c program that creates a thread that calculates the average of numbers in an array.
 ```c
 #include <stdio.h>
 #include <pthread.h>
@@ -1368,6 +1368,265 @@ int main()
     return 0;
 }
 ```
+## 41.Develop a C program to create a thread that calculates the sum of elements in an array.
+```c
+#include<stdio.h>
+#include<pthread.h>
+int sum=0;
+int n;
+void *calculate_sum(void *args)
+{
+        int *arr=(int *)args;
+        sum=0;
+        for(int i=0;i<n;i++)
+        {
+                sum+=arr[i];
+        }
+        printf("The sum of elements of array is:%d\n",sum);
+        return NULL;
+}
+int main()
+{
+        printf("Enter number of elements:\n");
+        scanf("%d",&n);
+        int arr[n];
+        printf("Enter elements of the array:\n");
+        for(int i=0;i<n;i++)
+        {
+                scanf("%d",&arr[i]);
+        }
+        pthread_t t1;
+        pthread_create(&t1,NULL,calculate_sum,arr);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 42.Write a c program to create a thread that calculates the factorial of numbers from 1 to 10.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *fact(void *args)
+{
+        int num=*(int *)args;
+        int fact;
+        for(int n=1;n<=num;n++)
+        {
+                printf("The factorial of");
+                fact=1;
+                for(int i=1;i<=n;i++)
+                {
+                        fact=fact*i;
+                }
+                printf(" %d is: %d\n",n,fact);
+        }
+        return NULL;
+}
+int main()
+{
+        int num;
+        printf("Range of number to calculate:\n");
+        scanf("%d",&num);
+        pthread_t t1;
+        pthread_create(&t1,NULL,fact,&num);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 43.Write a C program to create a thread that searches for a given number in an array.
+```c
+#include<stdio.h>
+#include<pthread.h>
+int key;
+int n;
+void *search(void *args)
+{
+        int *arr=(int *)args;
+        int is_found=0;
+        printf("Enter element to search:\n");
+        scanf("%d",&key);
+        for(int i=0;i<n;i++)
+        {
+                if(arr[i]==key)
+                {
+                        is_found=1;
+                }
+        }
+        if(is_found==1)
+        {
+                printf("The %d is present in the array.\n",key);
+        }
+        else
+        {
+                printf("The %d is not present in the array.\n",key);
+        }
+        return NULL;
+}
+int main()
+{
+        printf("Enter number of elements in an array:\n");
+        scanf("%d",&n);
+        printf("Enter elements of array:\n");
+        int arr[n];
+        for(int i=0;i<n;i++)
+        {
+                scanf("%d",&arr[i]);
+        }
+        pthread_t t1;
+        pthread_create(&t1,NULL,search,&arr);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 44.Develop a C program that reverses a given string.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<pthread.h>
+void *revstr(void *args)
+{
+        char *str=(char *)args;
+        int n=strlen(str);
+        for(int i=n-1;i>=0;i--)
+        {
+                printf("%c",str[i]);
+        }
+        return NULL;
+}
+int main()
+{
+        char str[100];
+        printf("Enter a string:\n");
+        fgets(str,100,stdin);
+        str[strcspn(str,"\n")]='\0';
+
+        pthread_t t1;
+        pthread_create(&t1,NULL,revstr,str);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 45.Develop a C program to create a thread that reads input from the user.
+```c
+#include <stdio.h>
+#include <pthread.h>
+void *read_input(void *args) {
+    char str[100];
+    printf("Thread: Enter a string:\n");
+    fgets(str, sizeof(str), stdin);
+    str[strcspn(str, "\n")] = '\0';
+
+    printf("Thread: You entered -> %s\n", str);
+    return NULL;
+}
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, read_input, NULL);
+    pthread_join(t1, NULL);
+    printf("Main: Thread finished execution.\n");
+    return 0;
+}
+```
+## 46.Write a C program to create a thread that performs addition of two matrices.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+#define MAX 10
+
+int rows, cols;
+int A[MAX][MAX], B[MAX][MAX], C[MAX][MAX];
+
+void *add_matrices(void *args) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            C[i][j] = A[i][j] + B[i][j];
+        }
+    }
+    printf("Resultant matrix after addition:\n");
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%d ", C[i][j]);
+        }
+        printf("\n");
+    }
+    return NULL;
+}
+
+int main() {
+    printf("Enter number of rows and columns:\n");
+    scanf("%d %d", &rows, &cols);
+
+    printf("Enter elements of first matrix:\n");
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            scanf("%d", &A[i][j]);
+
+    printf("Enter elements of second matrix:\n");
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            scanf("%d", &B[i][j]);
+
+    pthread_t t1;
+    pthread_create(&t1, NULL, add_matrices, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 47.Write a C program to create two threads using pthreads library.Each thread should print "Hello word" along with its thread ID.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *thread1(void *args)
+{
+        printf("Hello world\n");
+        return NULL;
+}
+void *thread2(void *args)
+{
+        printf("HEllo world\n");
+        return NULL;
+}
+int main()
+{
+        pthread_t t1,t2;
+        pthread_create(&t1,NULL,thread1,NULL);
+        printf("thread1 identifier:%lu\n",(unsigned long)t1);
+        pthread_create(&t2,NULL,thread2,NULL);
+        printf("Thread2 identifier:%lu\n",(unsigned long)t2);
+        pthread_join(t1,NULL);
+        pthread_join(t2,NULL);
+        return 0;
+}
+```
+## 48.Develop a C program to create a thread that calculates the length of a given string.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<pthread.h>
+int len=0;
+void *str_len(void *args)
+{
+        char str[100];
+        fgets(str,100,stdin);
+        str[strcspn(str,"\n")]='\0';
+        for(int i=0;str[i]!='\0';i++)
+        {
+                len++;
+        }
+        printf("The length of the string is:%d\n",len);
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_create(&t1,NULL,str_len,NULL);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+
+
 
 
 
