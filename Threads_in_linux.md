@@ -1625,7 +1625,696 @@ int main()
         return 0;
 }
 ```
+## 49.Write a C program to create two threads using pthreads library.Each thread should print "Hello world" along with its thread ID.
+```c
+#include<stdio.h>
+#include<pthread.h>
+void *thread1(void *args)
+{
+        printf("Hello world\n");
+        return NULL;
+}
+void *thread2(void *args)
+{
+        printf("HEllo world\n");
+        return NULL;
+}
+int main()
+{
+        pthread_t t1,t2;
+        pthread_create(&t1,NULL,thread1,NULL);
+        printf("thread1 identifier:%lu\n",(unsigned long)t1);
+        pthread_create(&t2,NULL,thread2,NULL);
+        printf("Thread2 identifier:%lu\n",(unsigned long)t2);
+        pthread_join(t1,NULL);
+        pthread_join(t2,NULL);
+        return 0;
+}
+```
+## 50. Modify the previous program to pass arguments to the threads and print those arguments along with the thread ID.
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <string.h>
+#include <stdlib.h>
 
+void *thread1(void *args)
+{
+    char *msg = (char *)args;
+    printf("Thread1 says: %s\n", msg);
+    printf("Thread1 ID: %lu\n", (unsigned long)pthread_self());
+    return NULL;
+}
+
+void *thread2(void *args)
+{
+    char *msg = (char *)args;
+    printf("Thread2 says: %s\n", msg);
+    printf("Thread2 ID: %lu\n", (unsigned long)pthread_self());
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1, t2;
+
+    char *msg1 = "Hello from Thread 1";
+    char *msg2 = "Hello from Thread 2";
+
+    pthread_create(&t1, NULL, thread1, (void *)msg1);
+    pthread_create(&t2, NULL, thread2, (void *)msg2);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+
+    return 0;
+}
+```
+## 50.Write a C program to demonstrate thread synchronization using mutex locks.Create two threads that increment a shared variable using mutex locks to ensure proper synchronization.
+```c
+#include<stdio.h>
+#include<pthread.h>
+int sh_var=0;
+pthread_mutex_t mtx;
+void *thread1(void *args)
+{
+        int i=0;
+        for(i=0;i<5;i++)
+        {
+                pthread_mutex_lock(&mtx);
+                sh_var++;
+                printf("the shared variable in incrementing thread:%d\n",sh_var);
+                pthread_mutex_unlock(&mtx);
+        }
+}
+void *thread2(void *args)
+{
+        int i=0;
+        for(i=0;i<5;i++)
+        {
+                pthread_mutex_lock(&mtx);
+                sh_var--;
+                printf("The shared variable in decrementing thread:%d\n",sh_var);
+                pthread_mutex_unlock(&mtx);
+        }
+}
+int main()
+{
+        pthread_t t1,t2;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,thread1,NULL);
+        pthread_create(&t2,NULL,thread2,NULL);
+        pthread_join(t1,NULL);
+        pthread_join(t2,NULL);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
+## 51.Extend the previous program to use semaphore using mutex locks.Create two threads that increment a shared variable using mutex locks to ensure proper synchronization.
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+int sh_var = 0;
+sem_t sem;
+
+void *thread1(void *args)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        sem_wait(&sem);
+        sh_var++;
+        printf("The shared variable in incrementing thread: %d\n", sh_var);
+        sem_post(&sem);
+    }
+    return NULL;
+}
+
+void *thread2(void *args)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        sem_wait(&sem);
+        sh_var--;
+        printf("The shared variable in decrementing thread: %d\n", sh_var);
+        sem_post(&sem);
+    }
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1, t2;
+    sem_init(&sem, 0, 1);
+    pthread_create(&t1, NULL, thread1, NULL);
+    pthread_create(&t2, NULL, thread2, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    sem_destroy(&sem);
+
+    return 0;
+}
+```
+## 52.Write a C program to implement the producer-consumer problem using pthreads.Create two threads-one for producing items and another for consuming items from a shared buffer?
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+#define SIZE 5       // buffer size
+#define N 10         // total items to produce/consume
+
+int buf[SIZE];       // buffer
+int count = 0;       // number of items in buffer
+int in = 0, out = 0; // circular buffer indices
+
+pthread_mutex_t lock;
+pthread_cond_t notempty, notfull;
+
+void *produce(void *arg)
+{
+    for (int item = 1; item <= N; item++)
+    {
+        pthread_mutex_lock(&lock);
+
+        while (count == SIZE)
+        {
+            pthread_cond_wait(&notfull, &lock); // wait if buffer full
+        }
+
+        buf[in] = item;
+        printf("Producer produced item: %d\n", item);
+        in = (in + 1) % SIZE;
+        count++;
+
+        pthread_cond_signal(&notempty); // signal consumer
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
+}
+
+void *consume(void *arg)
+{
+    for (int i = 1; i <= N; i++)
+    {
+        pthread_mutex_lock(&lock);
+
+        while (count == 0)
+        {
+            pthread_cond_wait(&notempty, &lock); // wait if buffer empty
+        }
+
+        int item = buf[out];
+        printf("Consumer consumed item: %d\n", item);
+        out = (out + 1) % SIZE;
+        count--;
+
+        pthread_cond_signal(&notfull); // signal producer
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
+}
+
+int main()
+{
+    pthread_t t1, t2;
+
+    pthread_mutex_init(&lock, NULL);
+    pthread_cond_init(&notempty, NULL);
+    pthread_cond_init(&notfull, NULL);
+
+    pthread_create(&t1, NULL, produce, NULL);
+    pthread_create(&t2, NULL, consume, NULL);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+
+    pthread_mutex_destroy(&lock);
+    pthread_cond_destroy(&notempty);
+    pthread_cond_destroy(&notfull);
+
+    printf("\nAll %d items produced and consumed successfully!\n", N);
+    return 0;
+}
+```
+## 53.Write a C program to demonstrate thread cancellation.Create a thread that runs infinite loop and cancels it after a certain condition is met from the main thread.
+```c
+#include<stdio.h>
+#include<pthread.h>
+#include<unistd.h>
+#include<stdlib.h>
+void *infi(void *arg)
+{
+        while(1)
+        {
+                printf("Thread running\n");
+                sleep(1);
+                pthread_testcancel();
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_create(&t1,NULL,infi,NULL);
+        printf("cancel thread\n");
+        pthread_cancel(t1);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 54.Write a C program to create a thread that prints the even numbers between 1 and 20.
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#define LIMIT 20   
+void *print_even(void *arg)
+{
+    for (int i = 1; i <= LIMIT; i++)
+    {
+        if(i%2==0)
+                printf("Even: %d\n", i);
+        sleep(1);
+    }
+    return NULL;
+}
+int main()
+{
+    pthread_t t1;
+    pthread_create(&t1, NULL, print_even, NULL);
+    pthread_join(t1, NULL);
+    printf("Finished printing even numbers up to %d\n", LIMIT);
+    return 0;
+}
+```
+## 55.Develop a C program to create two threads that prints odd and even numbers alternatively.
+```c
+#include <pthread.h>
+#define LIMIT 20   
+pthread_mutex_t lock;
+pthread_cond_t cond;
+int counter = 1;
+void *print_odd(void *arg) {
+    while (counter <= LIMIT) {
+        pthread_mutex_lock(&lock);
+        while (counter % 2 == 0) {
+            pthread_cond_wait(&cond, &lock);
+        }
+        if (counter <= LIMIT) {
+            printf("Odd : %d\n", counter);
+            counter++;
+        }
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
+}
+void *print_even(void *arg) {
+    while (counter <= LIMIT) {
+        pthread_mutex_lock(&lock);
+        while (counter % 2 == 1) {
+            pthread_cond_wait(&cond, &lock);
+        }
+        if (counter <= LIMIT) {
+            printf("Even: %d\n", counter);
+            counter++;
+        }
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&lock);
+    }
+    return NULL;
+}
+int main() {
+    pthread_t t1, t2;
+    pthread_mutex_init(&lock, NULL);
+    pthread_cond_init(&cond, NULL);
+    pthread_create(&t1, NULL, print_odd, NULL);
+    pthread_create(&t2, NULL, print_even, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    pthread_mutex_destroy(&lock);
+    pthread_cond_destroy(&cond);
+    printf("Finished printing numbers up to %d\n", LIMIT);
+    return 0;
+}
+```
+## 56.Implement a C program to create a thread that calculates the sum of squares of numbers from 1 to 10.
+```c
+#include<stdio.h>
+#include<pthread.h>
+int sum=0;
+void *square(void *args)
+{
+        printf("The sum of square of numbers is:");
+        int num=*((int *)args);
+        for(int i=1;i<=num;i++)
+        {
+                int res=i*i;
+                sum=sum+res;
+                printf("After adding %d^2 = %d → sum = %d\n", i, res, sum);
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        int n=10;
+        pthread_create(&t1,NULL,square,&n);
+        pthread_join(t1,NULL);
+        return 0;
+}
+```
+## 57.Write a C program to create a thread that calculates the product of numbers from 1 to 10
+```c
+#include <stdio.h>
+#include <pthread.h>
+void *calculate_product(void *arg) {
+    int product = 1;
+    for (int i = 1; i <= 10; i++) {
+        product *= i;
+    }
+    printf("The product of numbers from 1 to 10 is: %d\n", product);
+    return NULL; 
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, calculate_product, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 58.Develop a C program to create a thread that prints the first 10 terms of the fibonacci sequence.
+```c
+#include<stdio.h>
+#include<pthread.h>
+pthread_mutex_t mtx;
+void *range_fib(void *args)
+{
+        int a=0,b=1;
+        for(int n=1;n<10;n++)
+        {
+                int c=a+b;
+                a=b;
+                b=c;
+                pthread_mutex_lock(&mtx);
+                printf("%d\n",c);
+                pthread_mutex_unlock(&mtx);
+        }
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        pthread_mutex_init(&mtx,NULL);
+        pthread_create(&t1,NULL,range_fib,NULL);
+        pthread_join(t1,NULL);
+        pthread_mutex_destroy(&mtx);
+        return 0;
+}
+```
+## 59.Develop a C program to create a thread that finds the maximum element in an array.
+```c
+#include<stdio.h>
+#include<pthread.h>
+#define SIZE 8   
+int arr[SIZE] = {12, 45, 7, 89, 23, 56, 91, 34};
+
+void *find_max(void *arg) {
+    int max = arr[0];
+
+    for (int i = 1; i < SIZE; i++) {
+        if (arr[i] > max) {
+            max = arr[i];
+        }
+    }
+
+    printf("The maximum element in the array is: %d\n", max);
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, find_max, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 60.Implement a C program to create a thread that prints ASCII values of characters in a given string.
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <string.h>
+
+char str[] = "Hello";
+void *print_ascii(void *arg) {
+    int len = strlen(str);
+    printf("String: %s\n", str);
+    printf("ASCII values:\n");
+    for (int i = 0; i < len; i++) {
+        printf("Character: %c  ASCII: %d\n", str[i], str[i]);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, print_ascii, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 61.Develop a C program to create a thread that calculates the sum of all prime numbers up to a given limit.
+```c
+include <stdio.h>
+#include <pthread.h>
+#include <stdbool.h>
+bool is_prime(int n) {
+    if (n <= 1) return false;
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0) return false;
+    }
+    return true;
+}
+void *sum_primes(void *arg) {
+    int limit = *((int *)arg);
+    int sum = 0;
+    for (int i = 2; i <= limit; i++) {
+        if (is_prime(i)) {
+            sum += i;
+        }
+    }
+    printf("Sum of prime numbers up to %d is: %d\n", limit, sum);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    int n = 50;
+    pthread_create(&t1, NULL, sum_primes, &n);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 62.Write a C program to create a thread that calculates the area of a circle using a given radius.
+```c
+#include<stdio.h>
+#include<pthread.h>
+#define PI 3.14
+float res;
+void *circle_area(void *args)
+{
+        int *n=(int *)args;
+        res=PI*(*n)*(*n);
+        return NULL;
+}
+int main()
+{
+        pthread_t t1;
+        int r=5;
+        pthread_create(&t1,NULL,circle_area,&r);
+        pthread_join(t1,NULL);
+        printf("The area of the circle is:%f\n",res);
+        return 0;
+}
+```
+## 63.Develop a C program to create a thread that calculates the average of numbers in an array?
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+#define SIZE 6
+
+int arr[SIZE] = {10, 20, 30, 40, 50, 60};
+
+void *calculate_average(void *arg) {
+    int sum = 0;
+
+    for (int i = 0; i < SIZE; i++) {
+        sum += arr[i];
+    }
+
+    double average = (double)sum / SIZE;
+    printf("The average of array elements is: %.2f\n", average);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, calculate_average, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 64.Implement a C program to create a thread that prints the factors of a given number.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+void *print_factors(void *arg) {
+    int num = *((int *)arg);
+    printf("Factors of %d are: ", num);
+    for (int i = 1; i <= num; i++) {
+        if (num % i == 0) {
+            printf("%d ", i);
+        }
+    }
+    printf("\n");
+    return NULL;
+}
+int main() {
+    pthread_t t1;
+    int n = 36;
+    pthread_create(&t1, NULL, print_factors, &n);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 65.Develop a C program to create a thread that prints the English alphabet in uppercase.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+void *print_uppercase(void *arg) {
+    printf("Uppercase English Alphabet:\n");
+
+    for (char c = 'A';c <= 'Z';c++) {
+        printf("%c ", c);
+    }
+    printf("\n");
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_create(&t1, NULL, print_uppercase, NULL);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 66.Develop a C program that checks if a given number is divisible by another given number.
+```c
+#include <stdio.h>
+#include <pthread.h>
+struct numbers {
+    int a;
+    int b;
+};
+
+void *check_divisibility(void *arg) {
+    struct numbers *nums = (struct numbers *)arg;
+
+    if (nums->b == 0) {
+        printf("Division by zero is not allowed!\n");
+    } else if (nums->a % nums->b == 0) {
+        printf("%d is divisible by %d\n", nums->a, nums->b);
+    } else {
+        printf("%d is NOT divisible by %d\n", nums->a, nums->b);
+    }
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    struct numbers nums;
+    nums.a = 20;
+    nums.b = 5;
+    pthread_create(&t1, NULL, check_divisibility, &nums);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 67.Develop a C program to create a thread that prints the multiplication table of a given number up to a given limit.
+```c
+#include <stdio.h>
+#include <pthread.h>
+
+struct table_args {
+    int num;   // the number for which table is generated
+    int limit; // the limit up to which table is printed
+};
+
+void *print_table(void *arg) {
+    struct table_args *t = (struct table_args *)arg;
+
+    printf("Multiplication Table of %d up to %d:\n", t->num, t->limit);
+    for (int i = 1; i <= t->limit; i++) {
+        printf("%d x %d = %d\n", t->num, i, t->num * i);
+    }
+
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    struct table_args args;
+    args.num = 7;
+    args.limit = 10;
+    pthread_create(&t1, NULL, print_table, &args);
+    pthread_join(t1, NULL);
+
+    return 0;
+}
+```
+## 68.Develop a C program to create a thread that prints numbers from 10 to 1 in descending order using mutex locks.
+```c
+#include <stdio.h>
+#include <pthread.h>
+pthread_mutex_t lock;
+
+void *print_descending(void *arg) {
+    pthread_mutex_lock(&lock);
+    printf("Numbers from 10 to 1 in descending order:\n");
+    for (int i = 10; i >= 1; i--) {
+        printf("%d ", i);
+    }
+    printf("\n");
+
+    pthread_mutex_unlock(&lock);
+    return NULL;
+}
+
+int main() {
+    pthread_t t1;
+    pthread_mutex_init(&lock, NULL);
+    pthread_create(&t1, NULL, print_descending, NULL);
+    pthread_join(t1, NULL);
+    pthread_mutex_destroy(&lock);
+
+    return 0;
+}
+```
 
 
 
