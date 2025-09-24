@@ -345,8 +345,186 @@ int main() {
       - 0->scheduler
       - 1->init/systemd
       - -1->all processes
-  
 
+## 31.Discuss the concept of orphan processes and how they are handled in UNIX-like operating systems.
+### Orphan Process:
+- An orphan process is a process whose parent has terminated while the child is still running.
+- In UNIX-like systems,when a processs becomes orphaned, it is adopted by init (PID 1) or systemd (in modern linux).
+- This ensures the orphan is waited on properly to prevent zombies.
+### Handling:
+- Kernal automatically reassigns orphan processes to init.
+- init periodically calls wait() to clean them up.
 
+## 32.Write a program in C to demostrate process synchronization using semaphores.
+```c
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+sem_t sem;
+void* task(void* arg) {
+    sem_wait(&sem);   
+    printf("Thread %ld entering critical section\n", (long)arg);
+    sleep(1);
+    printf("Thread %ld leaving critical section\n", (long)arg);
+    sem_post(&sem);   
+    return NULL;
+}
+int main() {
+    pthread_t t1, t2;
+    sem_init(&sem, 0, 1); 
+    pthread_create(&t1, NULL, task, (void*)1);
+    pthread_create(&t2, NULL, task, (void*)2);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    sem_destroy(&sem);
+    return 0;
+}
+```
+## 33.Describe the concept of process priority and how it is managed in operating system.
+- Each process in an OS has a priority that determines scheduling order.
+- Higher-priority processes are scheduled before lower-priority ones.
+- Linux uses nice values(-20 to +19):
+     - Lower nice =higher priority
+- Managed by scheduler algorithm like CFS( Completely Fair Scheduler).
 
+## 34.Explain the purpose of the fork() system call in creating copy-on-write(COW) processes.
+- fork() creates a new process by duplicating the parent’s memory.
+- Instead of immediately copying memory, modern OSes use
+- ### Copy-on-Write (COW):
+- Both processes share the same memory pages as read-only.
+- When one process writes, a separate copy of that page is made.
+- This makes fork() efficient.
 
+## 35.Discuss the role of execvp() function in searching for executable files.
+- execvp() replaces the current process with a new executable.
+- Unlike execv(), it searches the PATH environment variable to find the executable.
+- Example: execvp("ls", args) will find /bin/ls.
+
+## 36.Write a C program to demonstrate the use of the execvpe() function.
+```c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+int main() {
+    char *args[] = {"ls", "-l", NULL};
+    char *envp[] = {"MYVAR=HelloWorld", NULL};
+    printf("Before execvpe\n");
+    if (execvpe("ls", args, envp) == -1) {
+        perror("execvpe failed");
+    }
+    printf("This will not print if execvpe succeeds\n");
+    return 0;
+}
+```
+## 37.Explain the concept of process context switching and its impact on system performance.
+- Context switch = switching CPU from one process/thread to another.
+- Involves saving the state (registers, program counter, stack pointer) of one process and loading another.
+- ### Impact:
+- Necessary for multitasking.
+- But frequent switches increase overhead (cache misses, scheduler latency).
+
+## 38.Write a C program to create a process group and change its process group ID (PGID).
+```c
+B#include <stdio.h>
+#include <unistd.h>
+int main() {
+    pid_t pid = fork();
+    if (pid == 0) {
+        printf("Child PID: %d, PGID before: %d\n", getpid(), getpgid(0));
+        setpgid(0, 0);
+        printf("Child PID: %d, PGID after: %d\n", getpid(), getpgid(0));
+    } else {
+        printf("Parent PID: %d, PGID: %d\n", getpid(), getpgid(0));
+    }
+    return 0;
+}
+```
+## 39.Explain the difference between process creation using fork() and pthread_create().
+| Aspect       | fork()                                 | pthread\_create()                   |
+| ------------ | -------------------------------------- | ----------------------------------- |
+| Memory Space | Creates new process (separate memory). | Creates new thread (shared memory). |
+| IPC          | Needs pipes, shared memory, sockets.   | Directly share variables.           |
+| Scheduling   | Independent processes.                 | Lighter threads in same process.    |
+| Overhead     | Higher (process creation).             | Lower (thread creation).            |
+
+## 40.Discuss the significance of the execvp() function in searching for executables in the PATH environment variable.
+- execvp() looks for the program in the PATH environment variable.
+- If you run execvp("ls", args), it checks /bin/ls, /usr/bin/ls, etc.
+- Saves programmer effort — no need to provide full path.
+
+## 41.Write a program in C to demonstrate inter-process communication (IPC) using shared memory.
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
+#include <string.h>
+
+#define SHM_SIZE 1024
+int main() {
+    int shmid;
+    char *shm
+    shmid = shmget(1234, SHM_SIZE, IPC_CREAT | 0666);
+    if (shmid < 0) {
+        perror("shmget");
+        exit(1);
+    }
+    shm = (char *)shmat(shmid, NULL, 0);
+    if (shm == (char *)-1) {
+        perror("shmat");
+        exit(1);
+    }
+    if (fork() == 0) {
+        strcpy(shm, "Hello from child using shared memory!");
+    } else {
+        sleep(1); // wait for child
+        printf("Parent read: %s\n", shm);
+    }
+    shmdt(shm);
+    shmctl(shmid, IPC_RMID, NULL);
+    return 0;
+}
+```
+## 42.Describe the role of the fork() system call in implementing the shell's job control
+- The shell uses fork() to create a child process when executing a command.
+- The parent (shell) can manage jobs:
+- Foreground (wait for child).
+- Background (&, parent doesn’t wait).
+- Enables features like job suspension (Ctrl+Z) and resuming (fg, bg).
+
+## 43.Explain the purpose of the execlp() function and provide an example
+- execlp() executes a file, searching PATH for the program.
+- Syntax:
+- int execlp(const char *file, const char *arg, ..., NULL);
+
+## 44.Discuss the significance of the setpgid() system call in managing process groups.
+- setpgid(pid, pgid) changes the process group of a process.
+- Used by shells for job control → allows grouping of processes (like pipelines) so signals (Ctrl+C, Ctrl+Z) can be sent to the whole group.
+
+## 45.Write a C program to create a child process using vfork() and demonstrate its usage
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+int main() {
+    pid_t pid = vfork();
+    if (pid == 0) {
+        printf("Child: Running with vfork(), PID=%d\n", getpid());
+        _exit(0);
+    } else {
+        printf("Parent: PID=%d, child PID=%d\n", getpid(), pid);
+    }
+    return 0;
+}
+```
+## 46.Explain the concept of process priority inheritance and its importance in real-time systems.
+- In real-time systems, priority inversion can occur:
+- A high-priority task waits on a resource locked by a low-priority task.
+- If a medium-priority task runs, the high-priority task is blocked longer.
+### Priority inheritance fixes this:
+- Temporarily raises the priority of the low-priority task holding the resource.
+- Ensures faster release and prevents deadline misses.
