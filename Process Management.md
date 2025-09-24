@@ -528,3 +528,16 @@ int main() {
 ### Priority inheritance fixes this:
 - Temporarily raises the priority of the low-priority task holding the resource.
 - Ensures faster release and prevents deadline misses.
+
+## 47.Describe the role of the fork() system call in copy-on-write(COW) mechanism and its benefits.
+- fork() creates a new child process by duplicating the parent process.
+- In traditional implementation, this would copy the entire memory space, which is expensive.
+### With Copy-on-Write (COW):
+- Parent and child initially share the same physical memory pages (marked as read-only).
+- If either process modifies a page, a private copy of that page is created (write triggers the copy).
+### Benefits:
+- Reduces memory usage.
+- Improves performance since actual copying happens only when necessary.
+- Makes fork() faster and efficient.
+
+## 48.Write a C program to create a pipeline between two processes using the pipe() system call.
