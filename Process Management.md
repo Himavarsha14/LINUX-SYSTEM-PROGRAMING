@@ -541,3 +541,5 @@ int main() {
 - Makes fork() faster and efficient.
 
 ## 48.Write a C program to create a pipeline between two processes using the pipe() system call.
+```c
+
