@@ -581,4 +581,19 @@ void main()
 }
 ```
 ## 49.Explain the concept of process scheduling policies such as FIFO,Round robin, and priority scheduling.
-- 
+### 1.FIFO(First In, First OUT/FCFs)
+- Processes are schedules in the order they arrive.
+- Simple, but can cause convoy effect(long job delays short jobs).
+
+### 2.Round Robbin(RR)
+- Each process gets a fixed time slice(Quantum).
+- After Quantum expires, the process is preempted and moved to the back of the queue.
+- Good for time-sharing systems, ensures fairness.
+
+### 3.Priority Scheduling
+- Each process has a priority value.
+- Higher-priority processes are executed first.
+- Can cause starvation for low-priority tasks (solved by aging).
+
+## 50.Discuss the significance of the execve() function in process creation and execution.
+
