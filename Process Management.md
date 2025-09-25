@@ -542,4 +542,43 @@ int main() {
 
 ## 48.Write a C program to create a pipeline between two processes using the pipe() system call.
 ```c
-
+#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<string.h>
+#include<sys/wait.h>
+void main()
+{
+        int fd[2];
+        pid_t pid;
+        char write_msg[]="Hello from parent via pipe!";
+        char read_msg[100];
+        if(pipe(fd)==-1)
+        {
+                perror("pipe");
+                exit(1);
+        }
+        pid=fork();
+        if(pid<0)
+        {
+                perror("fork");
+                exit(1);
+        }
+        else if(pid==0)
+        {
+                close(fd[1]);
+                read(fd[0],read_msg,sizeof(read_msg));
+                printf("Child received: %s\n",read_msg);
+                close(fd[0]);
+        }
+        else
+        {
+                close(fd[0]);
+                write(fd[1],write_msg,strlen(write_msg)+1);
+                close(fd[1]);
+        }
+        return 0;
+}
+```
+## 49.Explain the concept of process scheduling policies such as FIFO,Round robin, and priority scheduling.
+- 
