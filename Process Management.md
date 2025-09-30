@@ -596,4 +596,340 @@ void main()
 - Can cause starvation for low-priority tasks (solved by aging).
 
 ## 50.Discuss the significance of the execve() function in process creation and execution.
+- execve() is a system call in Linux/Unix used to execute a new program within the context of an existing process.
+- When a process calls execv(),its current memory image is replaces by a new program (code,data,stack).
+### Key points:
+- Does not create a new process->it just replaces the current process image.
+- File descriptors(open files, sockets,pipes) remain open unless marked close-on-exec.
+- Often used after fork():parent calls fork() to create a new process, child calls execve() to run a new program.
+- Example Use: Shells use fork() + execve() when you run commands.
+
+## 51.Write a C program using nice() to adjust process priority
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+
+int main() {
+    int priority;
+    printf("Default priority: %d\n", getpriority(PRIO_PROCESS, 0));
+    nice(5); // Increase niceness (lower priority)
+    priority = getpriority(PRIO_PROCESS, 0);
+    printf("New priority after nice(5): %d\n", priority);
+    while(1); // Keep process running
+    return 0;
+}
+```
+- nice() changes niceness->higher value=lower priority(less CPU time).
+
+## 52.Explain the concept of process swapping and its role in memory management.
+- Definition: Swapping is moving an entire process from main memory to disk(swap space) and bringing it back later.
+### Role:
+- Frees memory for other processes.
+- Allows more processes to run than the available RAM.
+
+### Drawback:
+Expensive (disk I>O is slow), can cause thrashing if excessive swapping occurs.
+
+## 53.Discuss the difference between the fork() and pthread_create() functions in terms of process/thread creation.
+| Feature     | `fork()`                                   | `pthread_create()`                     |
+| ----------- | ------------------------------------------ | -------------------------------------- |
+| Creates     | New **process**                            | New **thread**                         |
+| Memory      | Independent memory space                   | Shared memory within same process      |
+| PID/TID     | Child gets new PID                         | Thread has same PID, different TID     |
+| Performance | Heavier (duplicate PCB, memory structures) | Lighter (just a new execution context) |
+| Use case    | Multiprocessing                            | Multithreading                         |
+## 54.Describe the purpose of the prctl() system call in process management.
+- prctl() = process control.
+- Used to control specific characteristics of processes.
+- Examples:
+       - Set process name ( PR_SET_NAME).
+       - Get process name ( PR_GET_NAME).
+       - Enable/disable features (like core dumps, death signal).
+ - Useful in debugging and fine-tuning process behaviour.
+
+## 55.Write a C program to demonstrate the use of the clone() system call to create a thread.
+```c
+#define _GNU_SOURCE
+#include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int thread_func(void *arg) {
+    printf("Hello from clone! PID=%d\n", getpid());
+    return 0;
+}
+
+int main() {
+    char *stack = malloc(1024*1024); // Allocate stack for new thread
+    if (!stack) {
+        perror("malloc");
+        exit(1);
+    }
+
+    clone(thread_func, stack + (1024*1024), CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | SIGCHLD, NULL);
+    sleep(1); // Give time for thread to run
+    printf("Back in main process.\n");
+    free(stack);
+    return 0;
+}
+```
+## 56.Explain the concept of process preemption and its impact on system responsiveness.
+- Preemption = Forcibly suspending a running process so the CPU can switch to another.
+- Ensures:
+     - Fairness->no single process hogs CPU.
+     - Responisveness->interactive tasks(keyboard,GUI)get timely CPU.
+- Controlled by scheduler (e.g., Round Robbin, priority scheduling).
+
+## 57.Discuss the role of the exec functions in handling file descriptors during process execution.
+- On exex(), file descriptors remain open by default unless marked with FD_CLOEXCEC.
+- This allows the new program to reuse parent's open files(e.g., I/O redirection in shells).
+- Example:
+- ls > out.txt->shell opens out.txt,forks,child exec()s ls,and ls writes into out.txt.
+
+## 58.Write a C program to create a child process using fork() and communicate between parent and child using pipes.
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+
+int main() {
+    int fd[2];
+    pid_t pid;
+    char msg[] = "Hello from parent!";
+    char buffer[50];
+
+    pipe(fd);
+    pid = fork();
+
+    if (pid == 0) { // Child
+        close(fd[1]); // Close write end
+        read(fd[0], buffer, sizeof(buffer));
+        printf("Child received: %s\n", buffer);
+    } else { // Parent
+        close(fd[0]); // Close read end
+        write(fd[1], msg, strlen(msg)+1);
+    }
+    return 0;
+}
+```
+
+## 59.Explain the significance of process priorities and how they affect scheduling decisions.
+- Priorities decide which process gets CPU first.
+- High-priority =more CPU time, low-priority=less CPU time.
+- Helps in:
+      - Ensuring critical tasks (real-time,kernal) run quickly.
+      - Balancing background vs interactive workloads.
+
+## 60.Describe the process of process termination and the various ways it can occur.
+A process ends when:
+- Normal Exit->exit() call.
+- Error Exit->abnormal condition.
+- Killed by signal->eg., kill -9.
+- Parent killed->with SIGKILL or job control.
+On termination:
+- Resources are freed (memory, files).
+- Exit status is sent to the parent (Can be checked with wait()).
+
+## 61.Discuss the role of the exit status in process termination and how it can be retrieved by the parent process.
+- Every process return an exit status (an integer) when it terminates.
+- Purpose:
+     - Indicates success (0) or error (non-zero).
+     - Parent uses it to decide what happened to the child.
+- ### How parent retrives it:
+- By calling wait() or waitpid()->exit status is stored in the status variable.
+- Use macros WIFEXITED(status) to WEEXITSTATUS(status) to interpret.
+
+```c
+int status;
+pid_t pid = wait(&status);
+if (WIFEXITED(status)) {
+    printf("Child exited with status %d\n", WEXITSTATUS(status));
+}
+```
+
+## 62.Write a C program to demonstrate process synchronization using the fork() and wait() system calls.
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pid = fork();
+
+    if (pid == 0) { // Child
+        printf("Child: Doing work...\n");
+        sleep(2);
+        printf("Child: Done!\n");
+    } else { // Parent
+        wait(NULL); // Wait for child
+        printf("Parent: Child finished, now continuing.\n");
+    }
+    return 0;
+}
+```
+
+## 63.Explain the concept of process suspension and resumption using signals.
+- Processes can be paused (suspended) or resumed using signals:
+- SIGSTOP->suspends a process.
+- SIGCONT->resumes a process.
+- Example:
+- Kill -STOP <pid> suspends.
+- Kill -CONT <pid> resumes.
+- Useful in job control(shells: Ctrl+Z->suspend, fg/bg->resume).
+
+## 64.Discuss the role of process scheduling algorithms in determining the order of execution among processes. 
+- Decides which process runs next on CPU.
+- Goals:Fairness, Efficiency, Responsiveness.
+- Common algorithms:
+- FIFO/FCFS->Simple queue, non-preemptive.
+- Round Robin(RR)->preemptive,time slices,good for multitasking.
+- Priority Scheduling->Higher priority processes run first.
+- Multilevel Queue->Seperate queues for foreground/background.
+- Scheduling policy directly affects throughput, latency and user experience.
+
+## 65.Write a C program to demonstrate process synchronization using the fork() and wait() system calls
+```c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <unistd.h>
+#include <sched.h>
+#include <string.h>
+
+int main() {
+    struct sched_param param;
+    param.sched_priority = 10;
+
+    if (sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
+        perror("sched_setscheduler");
+    } else {
+        printf("Changed scheduling policy to SCHED_FIFO with priority 10\n");
+    }
+
+    while(1); // Keep running
+    return 0;
+}
+```
+## 66.Explain the concept of process migration and its relevance in distributed systems.
+- Definition:Moving a process from one machine to another during execution.
+- Relevance:
+      - Load balancing(Distribute work evenly).
+      - Fault tolerance(recover from failures).
+      - Resource optimization (move proces closer to required resources).
+- Used in cloud computing,cluster computing.
+
+## 67.Describe the role of process identifiers (PIDs) in process management and their uniqueness within the system.
+- PID = unique numbers assigned by OS to each process.
+- Used to:
+- Track/manage processes.
+- Send signals (kill,kill -9).
+- retrieve status(waitpid).
+- Uniqueness:At a given time, each process has a unique PID.
+
+## 68.Write a C program to create a child process using fork() and demonstrate inter-process communication (IPC) using shared memory.
+```c
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+
+int main() {
+    int shmid;
+    char *shm;
+    key_t key = 1234;
+
+    shmid = shmget(key, 1024, IPC_CREAT | 0666);
+    if (shmid < 0) { perror("shmget"); return 1; }
+
+    if (fork() == 0) { // Child
+        shm = shmat(shmid, NULL, 0);
+        printf("Child writing to shared memory...\n");
+        strcpy(shm, "Hello from child!");
+    } else { // Parent
+        wait(NULL);
+        shm = shmat(shmid, NULL, 0);
+        printf("Parent read: %s\n", shm);
+    }
+    return 0;
+}
+```
+## 69.Explain the concept of process tracing and its importance in debugging and monitoring.
+- Defintion:Mechanism to monitor and control execution of processes.
+- Implemented via ptrace() system call.
+- Importance:
+      - Debuggers(like gdb) use it.
+      - Allows setting breakpoints, inspecting memory, register.
+      - Useful for security monitoring.
+
+## 70.Discuss the role of the fork() system call in creating copy-on-write (COW) processes and its impact on memory usage.
+- Normally, fork() would copy entire parent memory->expenisve.
+- with COW:
+     - Parent & child share same memory pages initially (read-only).
+     - When either modifies, OS creates a private copy.
+- Benifits:
+     - Faster fork().
+     - Saves memory.
+- Example:Linux fork() + exec() combo is efficient due to COW.
+
+## 71.Describe the concept of process control blocks (PCBs) and their role in process management.
+- PCB = data structure maintained by OS for each process.
+- Contains:
+     - Process state(running,waiting,ready).
+     - Program counter(next instruction).
+     - CPU registers.
+     - Memory info.
+     - Scheduling info (priority, time slice).
+     - Open files list.
+  - Role:
+      - Stores all info to suspend & resume processes.
+      - Essential for context switching.
+
+## 72.Write a C program to demonstrate the use of the prctl() system call to change process attributes.
+```c
+// prctl_example.c
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <sys/prctl.h>
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
+
+int main() {
+    // Set process name (shows up in ps)
+    if (prctl(PR_SET_NAME, (unsigned long)"my_prctl_proc", 0, 0, 0) == -1) {
+        perror("prctl(PR_SET_NAME)");
+    }
+
+    // Set parent-death signal: get SIGTERM if parent dies
+    if (prctl(PR_SET_PDEATHSIG, SIGTERM) == -1) {
+        perror("prctl(PR_SET_PDEATHSIG)");
+    }
+
+    printf("PID=%d, name set to 'my_prctl_proc'. Parent PID=%d\n", getpid(), getppid());
+    printf("Sleeping for 60s — try killing parent to see PDEATHSIG behavior.\n");
+    for (int i=0;i<60;i++) sleep(1);
+    return 0;
+}
+```
+
+## 73.Explain the concept of process scheduling classes and their significance in real-time operating systems.
+- Scheduling Classes group policies with similar behaviour.
+- Examples in Linux:
+      - Real-time class:SCHED_FIFO, SCHED_RR.Tasks are scheduled before ordinary tasks and can preempt them.
+  Necessart for systems with strict timing(Audio processing, Control loops).
+- Normal class:SCHED_OTHER(CFS in Linux) for general-purpose fairness.
+- Batch/Idle: SCHED_BATCH, SCHED_IDLE for CPU-intensive or background tasks.
+### Significance in RTOS/real-time OS:
+- Guarantees for latency/jitter.
+- Deterministic dispatching:high priority real-time tasks run predictably.
+- Prevents starvation for critical tasks(though must be carefully designed to avoid starving lower-priority ones).
+
+        
+
+
+
 
