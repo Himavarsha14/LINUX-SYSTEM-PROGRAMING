@@ -928,8 +928,119 @@ int main() {
 - Deterministic dispatching:high priority real-time tasks run predictably.
 - Prevents starvation for critical tasks(though must be carefully designed to avoid starving lower-priority ones).
 
-        
+## 74.Discuss the role of the vfork() system call in process creation and its differences from fork().
+### vfork():
+- It is used to create a new process(child) that shares the address space of the parent process temporarily until it calls exec() or _exit().It is optimized for cases where the child immediately executes a new program
 
+### Differences from fork():
+| Feature       | `fork()`                                        | `vfork()`                                                       |
+| ------------- | ----------------------------------------------- | --------------------------------------------------------------- |
+| Address space | Child gets a **copy** of parent’s address space | Child **shares** parent’s address space                         |
+| Execution     | Parent and child execute **independently**      | Parent is **suspended** until child calls `exec()` or `_exit()` |
+| Performance   | Slower due to copying                           | Faster as no copy is made                                       |
+| Safety        | Safe to modify memory                           | Unsafe to modify shared memory before `exec()`                  |
+
+## 75.Describe the purpose of the sigaction() system call in handling signals in processes.
+- sigaction() is used to define how a process handles specific signals (like SIGINT, SIGTERM).
+- int sigaction(int signum,const struct sigaction *act, struct sigaction *oldact);
+- signum- signal number
+- act- specifies new action
+- oldact- retrives previous action
+## It allows:
+- Setting custom signal handlers
+- Ignoring signals
+- Restoring default behaviour
+- Using flags like SA_RESTART and SA_SIGINFO for more control.
+
+## 76.Explain the concept of process migration and its implications in distributed computing environments.
+- Process migration refers to moving a running process from one machine to another in a distributed system.
+### Implications:
+- Improves load balancing.
+- Enhances resource utilization.
+- Enables fault tolerance.
+- Requires maintaining process state(memory, open files, etc).
+- Complex due to network latency and consistency issues.
+
+## 77.Write a C program to create a child process using fork() and demonstrate process communication using message queues.
+```c
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <string.h>
+
+struct msg_buffer {
+    long msg_type;
+    char msg_text[100];
+};
+
+int main() {
+    key_t key = ftok("progfile", 65);
+    int msgid = msgget(key, 0666 | IPC_CREAT);
+
+    struct msg_buffer message;
+    message.msg_type = 1;
+    strcpy(message.msg_text, "Hello from Parent");
+    msgsnd(msgid, &message, sizeof(message), 0);
+    printf("Message sent: %s\n", message.msg_text);
+
+    msgrcv(msgid, &message, sizeof(message), 1, 0);
+    printf("Message received: %s\n", message.msg_text);
+
+    msgctl(msgid, IPC_RMID, NULL);
+    return 0;
+}
+```
+
+## 78.Discuss the role of the sigprocmask() system call in managing signal masks for processes.
+- sigprocmask() is used to block, unblock, or check signals in a process's signal mask.
+### usage:
+int sigprocmask(int how,const sigset_t *set, sigset_t *oldset);
+- how:SIG_BLOCK, SIG_UNBLOCK, SIG_SETMASK
+- It ensures signals are not handled while executing critical sections.
+
+## 79.Describe the purpose of the setrlimit() system call in setting resource limits for processes.
+setrlimit() sets resource limits for a process (like CPU time,file size, memory).
+```c
+#include <sys/resource.h>
+
+struct rlimit limit;
+limit.rlim_cur = 10;
+limit.rlim_max = 20;
+setrlimit(RLIMIT_CPU, &limit);
+```
+## 80.Discuss the concept of process groups and their importance in job control and signal propagation.
+- A process group is a collection of related processes (like a shell pipeline).
+### Importance:
+- Allows group signal control(killpg()).
+- Enables job control(fore ground/back groud jobs).
+- Helps the shell manage processes efficiently.
+
+## 81.Explain the role of the prlimit() system call in setting resource limits for processes.
+- prlimit() combines the functionality of getrlimit() and sterlimit()-it sets or retrieves resources limits for a given process.
+### syntax:
+```c
+int prlimit(pid_t pid, int resource,
+            const struct rlimit *new_limit,
+            struct rlimit *old_limit);
+```
+## 82.Discuss the concept of process scheduling policies in multi-core systems and their implications.
+Common policies:
+- SCHED_OTHER-default time-sharing.
+- SCHED_FIFO- real time, first-in-first-out.
+- SCHED_RR- round robin
+- SCHED_DEADLINE- deadline-based scheduling
+### Implications:
+- Affects CPU utilization.
+- Impacts latency and throughput
+- Important for real-time and parallel systems.
+
+## 83.Describe the role of the setpriority() system call in adjusting process priorities.
+- setpriority() sets the nice value(priority) of a process.
+- int setpriority(int which, id_t who, int prio);
+- which:PRIO_PROCESS, PRIO_PGRP, PRIO_USER
+- prio:--20(highest) to +19(lowest).
+
+## 84.
 
 
 
