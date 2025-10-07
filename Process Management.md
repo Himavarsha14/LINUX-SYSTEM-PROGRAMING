@@ -1040,7 +1040,252 @@ Common policies:
 - which:PRIO_PROCESS, PRIO_PGRP, PRIO_USER
 - prio:--20(highest) to +19(lowest).
 
-## 84.
+## 84.Discuss the role of the prlimit64() system call in setting resource limits for processes with 64-bit address space.
+### Purpose:
+- The prlimit64() system call sets or retrieves resource limits (like CPU time, memory usage, file size) for a process.
+### Syntax:
+```c
+int prlimit64(pid_t pid, int resource,
+              const struct rlimit64 *new_limit,
+              struct rlimit64 *old_limit);
+```
+### Key points:
+- Works with 64-bit address space, allowing very large limits (beyond 4GB).
+- Combines functionality of setrlimit() and getrlimit() in one call.
+- pid=0->affects the calling process.
+- Example resource limits:RLIMIT_CPU, RLIMIT_AS, RLIMIT_NOFILE.
+### Use:
+- To control how much CPU, memory, or file descriptors a process can consume.
 
+## 85.Describe the purpose of the sched_getaffinity() system call in querying the CPU affinity of a process.
+### purpose:
+- Retrieves the CPU affinity mask of a process --- i.e., which CPUs the process is allowed to run on.
 
+### Syntax:
+```c
+int sched_getaffinity(pid_t pid, size_t cpusetsize, cpu_set_t *mask);
+```
+### Explanation:
+- mask stores CPUs on which the process can execute.
+- pid=0->refers to the calling process.
+### Use:
+- Helps optimize performance by checking which cores are available for a process.
+
+## 86.Discuss the concept of process re-parenting and its implications in process management.
+### Definition:
+- Process re-parenting is the mechanism in which a child process is assigned a new parent process when its original parent terminates or exits before the child.
+
+### How it happens:
+- Every process in Linux has a parent process ID(PPID).
+- When a parent process dies before its child:
+      - The child becomes an orphan process.
+      - The init process(PID 1) or systemd automatically adopts (re-parents) the orphaned child.
+     - This enusres that every process in the system always has a valid parent.
+
+## 87.Discuss the concept of process checkpointing and its relevance in fault tolerance and process migration.
+### Definition:
+- Process checkpointing is the technique of saving the current state of a running process (CPU registers, memory, stack, open files, etc.) to a file ---called a checkppoint ---so that it can be resumed later from the same point.
+### Relevance:
+### 1.Fault Tolerance:
+- If a system crashes, the process can be restarted from the last checkpoint instead of from the beginning.
+### 2.Process Migration:
+- A checkpoint file can be transferred to another machine and resumed there (Useful in distributed systems and load balancing).
+### 3.Long-running tasks:
+- Scientific computations and simulations use checkpoints to avoid losing progress.
+Tools:DMTCP(Distributed Multithreaded Checkpointing), BLCR, CRIU.
+
+## 88.Explain the significance of the /proc filesystem in providing information about processes in Linux.
+### Definition:
+- /proc is a virtual filesystem that provides a window into the kernal and process information in Linux.
+### Key Points:
+- Contains directories named after process IDs(PIDs)->/proc/[pid]/
+- Common files:
+- /proc/[pid]/status->process state, memory info
+- /proc/[pid]/cmdline->command-line arguments
+- /proc/cpuinfo, /proc/meminfo->hardware info
+### Use:
+- Helps in monitoring, debugging, and gathering runtime system info.
+
+## 89.what is process and what is the difference between process and program?
+
+| **Aspect** | **Program**                         | **Process**                      |
+| ---------- | ----------------------------------- | -------------------------------- |
+| Definition | Set of instructions stored on disk. | Running instance of a program.   |
+| Nature     | Passive                             | Active                           |
+| Example    | `/bin/ls` file                      | `ls` command running in terminal |
+
+## 90.what type of infomation pcb contains ?
+Contains all information about a process:
+- process ID(PID).
+- Process state.
+- Program counter.
+- CPU registers.
+- Memory info.
+- Accounting info.
+- I/O status and open files.
+->Acts as the process's identify record inside the kernal.
+
+## 91.Explain about memory segements ?
+- Text Segment: Program code.
+- Data Segment: Initialized global/static variables.
+- BSS Segment: Uninitilized global/static variables.
+- Heap: Dynamically allocated memory( malloc,calloc ).
+- Stack: Function calls, local variables.
+
+## 92.when fork invoked what are things will happen ?
+- Duplicates the parent process.
+- Creates a child with a new PID.
+- Both processes start from the next instruction.
+- Memory and file descriptors are copied(Copy-on-Write).
+- Return values differ:
+      - Parent gets child PID.
+      - Child gets 0.
+
+## 93.what is the difference between ps and top?
+| **Command** | **Description**                                      |
+| ----------- | ---------------------------------------------------- |
+| `ps`        | Shows a snapshot of running processes at one moment. |
+| `top`       | Continuously updates live process information.       |
+
+## 94.what are the types of processes we have explain each process breifly?
+- Foreground:Runs interactively in terminal.
+- Background:Runs without terminal control.
+- Daemon:System service process(e.g.,sshd).
+- Zombie:Finished but not yet removed from process table.
+- Orphan:Parent exited before child.
+
+## 95.What is the PPID of Orphan Process.
+- PID 1(init/systemd) becomes the new parent.
+
+## 96.what is the difference between exit vs return?
+| **return**                              | **exit()**                     |
+| --------------------------------------- | ------------------------------ |
+| Exits current function.                 | Terminates the entire process. |
+| Used in functions.                      | Used anywhere in code.         |
+| In `main()`, `return` = `exit(status)`. |                                |
+
+## 97.In parent process can you access to the exit code of return value of child process (or) in parent process how do you block to get the id of child?
+- Parent can wait for child using wait() or waitpid():
+```c
+int status;
+waitpid(child_pid, &status, 0);
+if (WIFEXITED(status))
+    printf("Exit code: %d\n", WEXITSTATUS(status));
+```
+- Parent blocks untill child terminates.
+
+## 98.what is the difference between Zombie and Orphan process?
+| **Type**   | **Definition**                                       | **Cause**                    |
+| ---------- | ---------------------------------------------------- | ---------------------------- |
+| **Zombie** | Process terminated but entry still in process table. | Parent didn’t call `wait()`. |
+| **Orphan** | Parent terminated before child.                      | Adopted by `init`.           |
+
+## 99.what is the use of fork() ?
+- Creates a child process.
+- Enables parallel execution
+- Basis for multitasking and IPC in Linux.
+
+## 100.define system call name some blocking system calls?
+### Definition:
+- A system call is an interface between a user process and the kernal, allowing a program to request services (like file operations, process creation, or I/O) from the operating system.
+### Examples of system Calls:
+read(), Write(), open(), close(), fork(), exec(), wait(), exit().
+### Blocking system calls:
+- These calls suspend (block) the calling process untill an event occurs.
+Examples:
+- read()->blocks untill data is available.
+- accept()->Waits for a network connection.
+- wait()->waits for a child process to finish.
+- recv()->waits for incoming data.
+
+## 101.Why can’t we run a program directly from hard disk? Why copy to RAM for execution?
+- The CPU cannot access data directly from hard disk(too slow and non-volatile).
+- RAM (main memeory) is much faster and directly accessible by the CPU.
+- Hence, before execution, the program (binary) is loaded into RAM, then the CPU fetches instructions from there.
+
+## 102.How do you copy data from RAM to CPU registers?
+- The CPU uses the ḍata and control signals to fetch data from a specific memory address in RAM.
+- The address of the data is placed on the address bus.
+- The Memory Read(RD) signal is asserted.
+- Data is transferred through the data bus into the CPU register.
+
+## 103.How do you copy data from CPU registers to RAM?
+- The address of the destination memory is placed on the address bus.
+- Data from the register is put on the data bus.
+- The Memory Write(WR) signal is asserted.
+- The RAM controller writes data to that memory location.
+
+## 104.Explain about paging technique.
+### Definition:
+- Paging is a memory management technique that divides logical memory into fixed-size pages and physical memory into frames.
+### Key Points:
+- Each process has its own oage table to map virtual pages to physical frames.
+- Eliminates external fragmentation.
+- Page size is typically 4KB.
+- CPU generates virtual address->translated to physical address using page table.
+
+## 105.Why is the number of pages not fixed?
+- The number of pages depends on the process size and page size.
+-                     No.of pages=process size/page size
+- As process sizes vary, the number of required pages also varies.
+- Different processes->different memory requirements->different page counts.
+
+## 106.Explain about shared memory. Why do we require shared memory?
+### Definition: 
+- Shared memory is an interprocess communication (IPC) method that allows multiple processes to access a common region of memory.
+### Why required:
+- Fastest IPC method (no need to copy data through the kernal).
+- Enables efficient data sharing between related processes (e.g., client-server).
+- Useful for real-time or large data exchange scenarios.
+
+## 107.How can multiple processes share data?
+Multiple processes can share data using:
+- 1.Shared memory(most efficient).
+- 2.Pipes/FIFOs.
+- Message queues.
+- Sockets(for networked communication).
+- Files(Persistent data exchange).
+
+## 108.explain the scenario when pages of process-1 and pages of process-2 are copied into same frames (or) explain the scenario where pages of multiple process are sharing the same physical frames(or) Can the page table of multiple process point to same physical frames?
+- Yes, page tables of multiple processes can point to the same physical frame.
+### Example:
+- When two processes use a shared library or shared memory segment, both their page tables point to the same physical pages.
+- This allows data sharing without duplication.
+
+### Use cases:
+- Shared code segments (like libc).
+- IPC via shared memory.
+- Copy-on-Write (COW) mechanism after fork().
+
+## 109.How does the child process use the memory segment of the parent process?
+- After fork(), the child inherits the parent's address space(text, data, heap, stack).
+- Initially, they share the same physical pages (Copy-on-Write).
+- When either process writes to a shared page, a new copy is created for that process.
+
+## 110.How do parent and child processes keep track of which instruction to execute?
+- Each process has its own program counter(pc).
+- After fork(), both parent and child have identical PC values, but seperate copies.
+- The OS scheduler independently increments and maintain each PC as they execute.
+
+## 111.How do parent and child processes execute different blocks of code after fork()?
+- fork() returns different values:
+     - 0 to child.
+     - Child PID to parent.
+- Based on this, you can write conditional code:
+```c
+pid_t pid = fork();
+if (pid == 0)
+    printf("Child code\n");
+else
+    printf("Parent code\n");
+```
+## 112.Explain write operation to pages shared by parent and child (Copy-on-Write). Explain address translation.
+When a fork() system call is executed:
+- The child process gets a copy of the parent's address space(same code,data,heap,stack).
+- But physically, both processes share the same pages in memory (for efficiency) -until one of them tries to modify (write) a page.
+This is handled by a technique called Copy-on-Write(COW).
+### Copy 
+	​
+
+       
 
