@@ -59,6 +59,29 @@ int main() {
 ## 9.How do server create seperate process?
 - A server typically uses the fork() system call after accepting a client connection. The child process handles the client request, while the parent process continues listening for new connections.
 
+## 10.Advantage of Thread over process
+- Lightweight:Threads share the same address space, so less overhead than processes.
+- Faster communication:Threads can easily share data without IPC.
+- Less resource usage:Threads do not require separate memory allocation like processes.
+- Better performance:Thread creation, switching, and termination are faster than processes.
+- Parallelism:Multiple threads can perform tasks simultaneously, improving CPU utilization.
+
+## 11.Advantage of process over thread
+- Isolation:Each process has its own address space, so a crash is one process doesn't affect others.
+- Security:Processses can't easily corrupt each other's data.
+- Stabilty:Bugs in one process dont bring down the whole application.
+- Better fault tolerance:Easier to manage failures in separate processes.\
+
+## 12.How to overcome synchronization issues with global variables when multiple threads access them?
+- Use synchronization mechanisms:
+  - Mutex locks- to allow only one thread at a time.
+  - Semaphores- for controlling access count.
+  - Spinlocks/Condition variables- for more advanced synchronization.
+  - Atomic operations-for simple shared data.
+- Protect the critical section properly to avoid race conditions.
+
+
+
 
 
 
