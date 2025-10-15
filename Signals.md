@@ -148,4 +148,320 @@ int main()
 }
 ```
 
-## 
+## 7.Write a C program to install a custom signal handler for SIGILL.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGILL (Illegal Instruction)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGILL,&act,NULL);
+    raise(SIGILL);
+    while(1) pause();
+}
+```
+
+## 8.Write a C program to install a custom signal handler for SIGABRT.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+void handler(int signo){
+    printf("Caught SIGABRT (Abort)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGABRT,&act,NULL);
+    abort();
+    while(1) pause();
+}
+```
+
+## 9.Write a C program to install a custom signal handler for SIGQUIT
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGQUIT\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGQUIT,&act,NULL);
+    while(1) pause();
+}
+```
+## 10.Write a C program to install a custom signal handler for SIGTSTP.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGTSTP\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGTSTP,&act,NULL);
+    while(1) pause();
+}
+```
+## 11.Write a C program to install a custom signal handler for SIGVTALRM.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+void handler(int signo){
+    printf("Caught SIGVTALRM\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGVTALRM,&act,NULL);
+
+    struct itimerval timer={{1,0},{1,0}};
+    setitimer(ITIMER_VIRTUAL,&timer,NULL);
+
+    while(1);
+}
+```
+
+## 12.Write a C program to install a custom signal handler for SIGWINCH.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGWINCH (Window size changed)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGWINCH,&act,NULL);
+    while(1) pause();
+}
+```
+
+## 13.Write a C program to install a custom signal handler for SIGXFSZ.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGXFSZ (File size limit exceeded)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGXFSZ,&act,NULL);
+    raise(SIGXFSZ);
+    while(1) pause();
+}
+```
+## 14.Write a C program to install a custom signal handler for SIGPWR.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGPWR (Power failure restart)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGPWR,&act,NULL);
+    raise(SIGPWR);
+    while(1) pause();
+}
+```
+## 15.Write a C program to install a custom signal handler for SIGSYS.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGSYS (Bad system call)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGSYS,&act,NULL);
+    raise(SIGSYS);
+    while(1) pause();
+}
+```
+## 16.Write a C program to install a custom signal handler for SIGIO.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGIO (I/O possible)\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGIO,&act,NULL);
+    raise(SIGIO);
+    while(1) pause();
+}
+```
+## 17.Write a C program to install a custom signal handler for SIGUSR2.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught signal %d (USR1 or USR2)\n",signo);
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGUSR1,&act,NULL);
+    sigaction(SIGUSR2,&act,NULL);
+    while(1) pause();
+}
+```
+## 18.Write a C program to install a custom signal handler for SIGALRM.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGALRM\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGALRM,&act,NULL);
+    alarm(3);
+    while(1) pause();
+}
+```
+## 19.Write a C program to install a custom signal handler for SIGTRAP.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo){
+    printf("Caught SIGTRAP\n");
+}
+
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler=handler;
+    sigaction(SIGTRAP,&act,NULL);
+    raise(SIGTRAP);
+    while(1) pause();
+}
+```
+## 20.Write a C program to install a custom signal handler for SIGTTIN.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo) {
+    printf("Caught SIGTTIN (background read from terminal)\n");
+    fflush(stdout);
+}
+
+int main() {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = handler;
+    sigaction(SIGTTIN, &act, NULL);
+
+    printf("PID: %d\n", getpid());
+    printf("Run in background and try to read input to trigger SIGTTIN\n");
+
+    while (1) pause();
+}
+```
+## 21.Write a C program to install a custom signal handler for SIGCONT.
+```c
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void handler(int signo) {
+    printf("Caught SIGCONT (process continued)\n");
+    fflush(stdout);
+}
+
+int main() {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = handler;
+    sigaction(SIGCONT, &act, NULL);
+
+    printf("PID: %d\n", getpid());
+    printf("Press Ctrl+Z to stop, then 'fg' to continue\n");
+
+    while (1) pause();
+}
+```
+
+
+
