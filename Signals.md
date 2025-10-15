@@ -727,3 +727,118 @@ int main()
                 pause();
 }
 ```
+## 42.Write a C program to handle SIGBUS and SIGCHILD together.
+```c
+/* file: bus_chld.c */
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+void h(int s){
+    if(s==SIGBUS)
+    {
+        printf("SIGBUS caught\n"); _exit(1);
+    }
+    if(s==SIGCHLD)
+    {
+       wait(NULL); printf("SIGCHLD caught\n");
+    }
+}
+
+int main(){
+    struct sigaction a; memset(&a,0,sizeof(a));
+    a.sa_handler = h;
+    sigaction(SIGBUS,&a,NULL);
+    sigaction(SIGCHLD,&a,NULL);
+    if(fork()==0){ _exit(0); }
+    /* simulate bus error by raise for demo */
+    raise(SIGBUS);
+    while(1) pause();
+}
+```
+## 43.Write a C program to handle SIGPWR and SIGSYS.
+```c
+/* file: pwr_sys.c */
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void h(int s){ printf("Caught %d\n", s); }
+
+int main(){
+    struct sigaction a; memset(&a,0,sizeof(a));
+    a.sa_handler = h;
+    sigaction(SIGPWR,&a,NULL);
+    sigaction(SIGSYS,&a,NULL);
+    /* test by raising */
+    raise(SIGPWR);
+    raise(SIGSYS);
+    while(1) pause();
+}
+```
+## 44.Write a C program to handle SIGPIPE and SIGQUIT.
+```c
+/* file: pipe_quit.c */
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+
+void h(int s){ printf("Caught %d\n", s); }
+
+int main(){
+    struct sigaction a; memset(&a,0,sizeof(a));
+    a.sa_handler = h;
+    sigaction(SIGPIPE,&a,NULL);
+    sigaction(SIGQUIT,&a,NULL);
+
+    int fd[2]; pipe(fd);
+    close(fd[0]); /* no reader */
+    write(fd[1],"x",1); /* triggers SIGPIPE */
+    while(1) pause();
+}
+```
+## 45.Write a C program to handle fork:parent and child handle SIGUSR1.parent forwards to child.
+```c
+/* file: parent_child_usr1.c */
+#include <stdio.h>
+#include <signal.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+pid_t child = 0;
+
+void parent_h(int s){
+    printf("Parent got SIGUSR1, forwarding to child %d\n", child);
+    kill(child, SIGUSR1);
+}
+
+void child_h(int s){
+    printf("Child got SIGUSR1\n");
+}
+
+int main(){
+    struct sigaction a; memset(&a,0,sizeof(a));
+    a.sa_handler = parent_h;
+    if((child=fork())==0){
+        /* child */
+        memset(&a,0,sizeof(a));
+        a.sa_handler = child_h;
+        sigaction(SIGUSR1,&a,NULL);
+        printf("Child PID=%d waiting for SIGUSR1\n", getpid());
+        while(1) pause();
+    } else {
+        /* parent */
+        sigaction(SIGUSR1,&a,NULL);
+        printf("Parent PID=%d, child PID=%d\n", getpid(), child);
+        /* send SIGUSR1 to parent to trigger forwarding (demo) */
+        raise(SIGUSR1);
+        wait(NULL);
+    }
+    return 0;
+}
+```
