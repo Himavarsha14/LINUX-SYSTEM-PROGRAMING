@@ -462,6 +462,268 @@ int main() {
     while (1) pause();
 }
 ```
+## 22.Write a c program on watch dog timer and explain its working.
+```c
+/* file: sigaction_demo.c */
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
 
+void handler(int s){ printf("Handler for %d\n", s); fflush(stdout); }
 
+int main(){
+    struct sigaction act;
+    memset(&act,0,sizeof(act));
+    act.sa_handler = handler;
+    act.sa_flags = 0;
+    sigaction(SIGINT, &act, NULL);   /* Ctrl+C */
+    sigaction(SIGTERM, &act, NULL);
 
+    printf("sigaction handlers installed (SIGINT, SIGTERM). PID=%d\n", getpid());
+    while(1) pause();
+    return 0;
+}
+```
+## 23.Writte a C program to demonstrate hoe to block signals using sigprocmask.
+```c
+#include<stdio.h>
+#include<signal.h>
+#include<string.h>
+#include<unistd.h>
+int main()
+{
+        sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set,SIGINT);
+        printf("Blocking SIGINT for 5 seconds.\n");
+        sigprocmask(SIG_BLOCK,&set,NULL);
+        sleep(5);
+        printf("Unblocking SIGINT.\n");
+        while(1);
+        return 0;
+}
+```
+##  24.Write a C program to handle Signal handling in multithreaded environment.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<signal.h>
+#include<pthread.h>
+#include<unistd.h>
+void *thread(void *arg)
+{
+        printf("thread started, sleeping....\n");
+        sleep(10);
+        printf("Thread done\n");
+        return NULL;
+}
+void handler(int s)
+{
+        printf("Main thread caught signal %d\n",s);
+        fflush(stdout);
+}
+int main()
+{
+        pthread_t t;
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_handler=handler;
+        sigaction(SIGINT,&act,NULL);
+        pthread_create(&t,NULL,thread,NULL);
+        printf("Send Ctrl+c to see which thread handles it\n");
+        pthread_join(t,NULL);
+        return 0;
+}
+```
+
+## 25.Write a C program to handler a real-time signal using sigqueue.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<signal.h>
+#include<unistd.h>
+void sighandler(int s,siginfo_t *info, void *u)
+{
+        printf("RT signal %d received, value=%d\n",s,info->si_value.sival_int);
+        fflush(stdout);
+}
+int main()
+{
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_sigaction=sighandler;
+        act.sa_flags=SA_SIGINFO;
+        sigaction(SIGRTMIN,&act,NULL);
+
+        union sigval val;
+        val.sival_int=123;
+        sigqueue(getpid(), SIGRTMIN,val);
+        while(1)
+                pause();
+        return 0;
+}
+```
+## 26.Write a c program to handle SIGTSTP and suspend the process.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<signal.h>
+#include<unistd.h>
+void sighandler(int signo)
+{
+        printf("SIGTSTP caught\n");
+        raise(SIGTSTP);
+}
+int main()
+{
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_handler=sighandler;
+        sigaction(SIGTSTP,&act,NULL);
+        printf("Press Ctrl+z to trigger SIGTSTP\n");
+        while(1)
+                pause;
+        return 0;
+}
+```
+## 27.Write a C program to handle multiple signals using sigaction().
+```c
+#include<stdio.h>
+#include<string.h>
+#include<signal.h>
+#include<unistd.h>
+void sighandler(int signo)
+{
+        printf("Executing signal handler\n");
+}
+int main()
+{
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_handler=sighandler;
+        sigaction(SIGINT,&act,NULL);
+        sigaction(SIGTERM,&act,NULL);
+        sigaction(SIGUSR1,&act,NULL);
+        printf("Handlers are for SIGINT<SIGTERM<SIGUSR1 installed.PID=%d\n",getpid());
+        while(1)
+                pause();
+}
+```
+## 28.Write a C program to demonstrate IPC using signals.
+```c
+#include<stdio.h>
+#include<string.h>
+#include<signal.h>
+#include<unistd.h>
+#include<sys/wait.h>
+volatile sig_atomic_t got=0;
+void sighandler(int signo)
+{
+        got=1;
+}
+int main()
+{
+        pid_t pid;
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_handler=sighandler;
+        sigaction(SIGUSR1,&act,NULL);
+        sigaction(SIGUSR2,&act,NULL);
+        pid=fork();
+        if(pid==0)
+        {
+                printf("Child sleeping 1s then sending SIGUSR1 to parent (%d)\n",getppid());
+                sleep(1);
+                kill(getppid(),SIGUSR1);
+                while(!got)
+                        pause();
+                printf("Child:got reply from parent,exiting\n");
+                return 0;
+        }
+        else
+        {
+                printf("Parent:Waiting for SIGUSR1, sending SIUSSR2 to child (%d)\n",pid);
+                kill(pid,SIGUSR2);
+                wait(NULL);
+        }
+        return 0;
+}
+```
+## 29.Write a C program to demonstrate error handling using signals in system calls.
+```c
+#include<stdio.h>
+#include<signal.h>
+#include<string.h>
+#include<unistd.h>
+#include<errno.h>
+void sighandler(int signo)
+{
+        printf("Signal %d receieved\n",signo);
+}
+int main()
+{
+        struct sigaction act;
+        char buf[10];
+        memset(&act,0,sizeof(act));
+        act.sa_handler=sighandler;
+        sigaction(SIGALRM,&act,NULL);
+        alarm(2);
+        ssize_t n;
+retry:
+        n=read(0,buf,10);
+        if(n<0)
+        {
+                if(errno==EINTR)
+                {
+                        printf("read interrupted by signal,retrying\n");
+                        goto retry;
+                }
+                perror("read");
+                return 1;
+        }
+        printf("read returned %zd bytes\n",n);
+        return 0;
+}
+```
+## 40.Write a program to block and unblock using sigprocmask()
+```c
+#include<stdio.h>
+#include<signal.h>
+#include<string.h>
+#include<unistd.h>
+int main()
+{
+        sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set,SIGINT);
+        printf("Blocking SIGINT for 5s.Try ctrl+c\n");
+        sigprocmask(SIG_BLOCK,&set,NULL);
+        sleep(5);
+        printf("Unblocking SIGINT\n");
+        sigprocmask(SIG_UNBLOCK,&set,NULL);
+        while(1)
+                pause();
+}
+```
+## 41.Write a C programming to handle SIGBUS in system programming context.
+```c
+#include<stdio.h>
+#include<signal.h>
+#include<string.h>
+#include<unistd.h>
+void sighandler(int signo)
+{
+        printf("caught SIGBUS %d\n",signo);
+}
+int main()
+{
+        struct sigaction act;
+        memset(&act,0,sizeof(act));
+        act.sa_handler=sighandler;
+        sigaction(SIGBUS,&act,NULL);
+        raise(SIGBUS);
+        while(1)
+                pause();
+}
+```
