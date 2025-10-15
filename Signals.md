@@ -130,6 +130,22 @@ int main()
 ```
 ## 6.Write a C program to install a custom signal handler for SIGTERM.
 ```c
+#include<stdio.h>
+#include<signal.h>
+#include<unistd.h>
+void term_handler(int sig)
+{
+        printf("Caught SITERM signal\n");
+        _exit(0);
+}
+int main()
+{
+        signal(SIGTERM,term_handler);
+        printf("PID:%d.Use 'kill -15 %d' to send SIGTERM.\n",getpid(),getpid());
+        while(1)
+                pause;
+        return 0;
+}
 ```
 
 ## 
