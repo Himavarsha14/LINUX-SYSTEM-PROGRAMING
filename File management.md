@@ -455,7 +455,144 @@ int main()
         return 0;
 }
 ```
+## 22.Write a c program to check whether the given path is file or not.
+```c
+#include<stdio.h>
+#include<sys/stat.h>
+int main()
+{
+        char path[256];
+        struct stat path_stat;
+        printf("Enter the path:");
+        scanf("%s",path);
+        if(stat(path,&path_stat)!=0)
+        {
+                perror("stat");
+                return 1;
+        }
+        if(S_ISDIR(path_stat.st_mode))
+        {
+                printf("The path refers to a DIRECTORY.\n");
+        }
+        else if(S_ISREG(path_stat.st_mode))
+        {
+                printf("The path refers to a FILE.\n");
+        }
+        else
+        {
+                printf("The path refers to another type.\n");
+        }
+        return 0;
+}
+```
+## 23.Develop a C program to create a hard link named "hardlink.txt" to a file named "source.txt".
+```c
+#include<stdio.h>
+#include<unistd.h>
+int main()
+{
+        const char *source="source.txt";
+        const char *linkname="hardlink.txt";
+        if(link(source,linkname)==0)
+        {
+                printf("Hard link created successfully.\n");
+        }
+        else
+        {
+                perror("link");
+        }
+        return 0;
+}
+```
+## 24.Implement a C program to read and display the contents of a CSV file named "data.csv"?
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<errno.h>
+int main()
+{
+        int fd;
+        fd=open("data.csv",O_RDONLY|O_CREAT,0666);
+        if(fd<0)
+        {
+                perror("oprn system call failed\n");
+                return 1;
+        }
+        char buffer[1024];
+        int n;
+        while((n=read(fd,buffer,sizeof(buffer)-1))>0)
+        {
+                buffer[n]='\0';
+                printf("%s",buffer);
+        }
+        close(fd);
+        return 0;
+}
+```
+## 25.Write a C program to get the absolute path of the current working directory.
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<limits.h>
+int main()
+{
+        char cwd[PATH_MAX];
+        if(getcwd(cwd,sizeof(cwd))!=NULL)
+        {
+                printf("Current working directory:%s\n",cwd);
+        }
+        else
+        {
+                perror("getcwd");
+        }
+        return 0;
+}
+```
+## 26.Develop a C program to get the size of a directory.
+```c
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<dirent.h>
+#include<sys/stat.h>
+long get_dir_size(const char *path)
+{
+        DIR *dir;
+        struct dirent *entry;
+        struct stat info;
+        char fullpath[1024];
+        long total_size=0;
+        dir=opendir(path);
+        if(!dir)
+                return 0;
+        while((entry=readdir(dir))!=NULL)
+        {
+                if(strcmp(entry->d_name,".")==0 || strcmp(entry->d_name, "..")==0)
+                        continue;
+                snprintf(fullpath,sizeof(fullpath),"%s/%s",path,entry->d_name);
+                if(stat(fullpath,&info)==0)
+                {
+                        if(S_ISDIR(info.st_mode))
+                                total_size+=get_dir_size(fullpath);
+                        else
+                                total_size+=info.st_size;
+                }
+        }
+        closedir(dir);
+        return total_size;
+}
+int main()
+{
+        const char *dir="Docunents";
+        long size=get_dir_size(dir);
+        printf("Total size of directory %s: %ld bytes\n",dir,size);
+        return 0;
+}
+```
 
-
+## 27.Implement a C program to recursively copy all files and directories from on directory to another.
+```c
 
 
