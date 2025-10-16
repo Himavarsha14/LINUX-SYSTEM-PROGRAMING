@@ -594,5 +594,186 @@ int main()
 
 ## 27.Implement a C program to recursively copy all files and directories from on directory to another.
 ```c
+#include<stdlib.h>
+#include<string.h>
+#include<sys/stat.h>
+#include<dirent.h>
+#include<unistd.h>
+void copy_file(const char *src,const char *dest)
+{
+        FILE *fs=fopen(src,"rb");
+        FILE *fd=fopen(dest,"wb");
+        if(!fs||!fd)
+                return;
+        char buf[1024];
+        size_t n;
+        while((n=fread(buf,1,sizeof(buf),fs))>0)
+                fwrite(buf,1,n,fd);
+        fclose(fs);
+        fclose(fd);
+}
+void copy_dir(const char *src,const char *dest)
+{
+        mkdir(dest,0755);
+        DIR *dir=opendir(src);
+        if(!dir)
+                return;
+        struct dirent *entry;
+        char src_path[1024],dest_path[1024];
+        while((entry=readdir(dir)))
+        {
+                if(!strcmp(entry->d_name,".")||!strcmp(entry->d_name,".."))
+                        continue;
+                snprintf(src_path,sizeof(src_path),"%s/%s",src,entry->d_name);
+                snprintf(dest_path,sizeof(dest_path),"%s/%s",dest,entry->d_name);
 
+                struct stat st;
+                stat(src_path,&st);
+                if(S_ISDIR(st.st_mode))
+                {
+                        copy_dir(src_path,dest_path);
+                }
+                else
+                {
+                        copy_file(src_path,dest_path);
+                }
+        }
+        closedir(dir);
+}
+int main()
+{
+        const char *src="source_dir";
+        const char *dest="dest_dir";
+        copy_dir(src,dest);
+        printf("Directory copied successfully.\n");
+        return 0;
+}
+```
+## 28.Write a C program to get the number of files in a directory
+```c
+#include<stdio.h>
+#include<dirent.h>
+#include<string.h>
+int main()
+{
+        DIR *dir=opendir(".");
+        if(!dir)
+        {
+                perror("opendir");
+                return 1;
+        }
+        struct dirent *entry;
+        int count=0;
+        while((entry=readdir(dir))!=NULL)
+        {
+                if(entry->d_type==DT_REG)
+                        count++;
+        }
+        closedir(dir);
+        printf("Number of files in directory are:%d\n",count);
+        return 0;
+}
+```
+## 29.Implement a C program to read data from a FIFO named "myfifo".
+```c
+#include<stdio.h>
+#include<sys/stat.h>
+int main(void)
+{
+        const char *fifo="myfifo";
+        if(mkfifo(fifo,0666)==0)
+        {
+                printf("FIFo '%s' created successfully.\n",fifo);
+        }
+        else
+        {
+                perror("mkfifo");
+                return 1;
+        }
+        return 0;
+}
+```
+## 30.Write a C program to truncate a file named "file.txt" to a specified length?
+### Reader:
+```c
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+int main(void)
+{
+        const char *fifo="myfifo";
+        int fd=open(fifo,O_RDONLY|O_CREAT,0666);
+        if(fd==-1)
+        {
+                perror("open");
+                return 1;
+        }
+char buf[1024];
+ssize_t n;
+while((n=read(fd,buf,sizeof(buf)-1))>0)
+{
+        buf[n]='\0';
+        printf("%s",buf);
+}
+if(n==-1)
+        perror("read");
+        close(fd);
+        return 0;
+}
+```
+### Writer:
+```c
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<string.h>
+int main(void)
+{
+        const char *fifo="myfifo";
+        int fd=open(fifo,O_WRONLY);
+        if(fd==-1)
+        {
+                perror("open");
+                return 1;
+        }
+        const char *msg="This is my message from eriter.\n";
+        write(fd,msg,strlen(msg));
+        close(fd);
+        return 0;
+}
+```
+## 31.Develop a C program to search for a specific string in a file named "data.txt" and display the line number(s) where it occurs?
+```c
+#include<stdio.h>
+#include<string.h>
+int main(void)
+{
+        const char *fname="hardlink.txt";
+        const char *pattern="search";
+         FILE *fp=fopen(fname,"r");
+         if(!fp)
+         {
+                 perror("fopen");
+                 return 1;
+         }
+         char line[4096];
+         int lineno=0;
+         int found=0;
+         while(fgets(line,sizeof(line),fp))
+         {
+                 lineno++;
+                 if(strstr(line,pattern))
+                 {
+                         printf("Found on line %d:%s",lineno,line);
+                         found=1;
+                 }
+         }
+         if(!found)
+                 printf("'%s' not found in %s\n",pattern,fname);
+         fclose(fp);
+         return 0;
+}
+```
+## 32.Implement a C program to get the file type (regular file, directory, symbolic link, etc.) of a given path?
+```c
 
