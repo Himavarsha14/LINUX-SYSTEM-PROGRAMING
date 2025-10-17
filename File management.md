@@ -776,4 +776,408 @@ int main(void)
 ```
 ## 32.Implement a C program to get the file type (regular file, directory, symbolic link, etc.) of a given path?
 ```c
+#include<stdio.h>
+#include<sys/stat.h>
 
+void print_type(mode_t m)
+{
+        if(S_ISREG(m))
+                printf("regular file\n");
+        else if(S_ISDIR(m))
+                printf("directory\n");
+        else if(S_ISLNK(m))
+                printf("Symbolic link\n");
+        else if(S_ISCHR(m))
+                printf("character device\n");
+        else if(S_ISBLK(m))
+                printf("block device\n");
+        else if(S_ISFIFO(m))
+                printf("Fifo pipe\n");
+        else if(S_ISSOCK(m))
+                printf("socket\n");
+        else
+                printf("unknown\n");
+}
+int main(int argc, char **argv)
+{
+        if(argc!=2)
+        {
+                fprintf(stderr, "usage:%s<path>\n",argv[0]);
+                return 1;
+        }
+        struct stat st;
+        if(lstat(argv[1],&st)!=0)
+        {
+                perror("lsat");
+                return 1;
+        }
+        printf("%s: ",argv[1]);
+        print_type(st.st_mode);
+        return 0;
+}
+```
+## 33.Write a C program to create a new empty file named "empty.txt"
+```
+#include<stdio.h>
+#include<fcntl.h>
+#include<unistd.h>
+#include<string.h>
+int main()
+{
+        int fd;
+        fd=open("empty.txt",O_CREAT|O_RDONLY,0644);
+        if(fd<0)
+        {
+                printf("Open system call failed.\n");
+                return 1;
+        }
+        close(fd);
+        return 0;
+}
+```
+## 34.Develop a C program to get the permissions (mode) of a file named "file.txt".
+```c
+#include<stdio.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<fcntl.h>
+int main()
+{
+        struct stat st;
+        if(stat("hardlink.txt",&st)==-1)
+                return 1;
+        char buf[50];
+        int len=sprintf(buf,"permissions:%o\n",st.st_mode &0777);
+        write(1,buf,len);
+        return 0;
+}
+```
+## 35.Implement a C program to recursively delete a directory named "Temp" and all its contents?
+```c
+#include<stdio.h>
+#include<dirent.h>
+#include<sys/stat.h>
+#include<unistd.h>
+#include<string.h>
+#include<fcntl.h>
+#include<errno.h>
+void delete_dir(const char *path)
+{
+        DIR *dir=opendir(path);
+        if(!dir)
+        {
+                perror("opendir");
+                return;
+        }
+        struct dirent *entry;
+        struct stat info;
+        char fullpath[512];
+        while((entry=readdir(dir))!=NULL)
+        {
+                if(strcmp(entry->d_name,".")==0||strcmp(entry->d_name,"..")==0)
+                        continue;
+                snprintf(fullpath,sizeof(fullpath),"%s/%s",path,entry->d_name);
+                if(stat(fullpath,&info)==0)
+                {
+                        if(S_ISDIR(info.st_mode))
+                        {
+                                delete_dir(fullpath);
+                                rmdir(fullpath);
+                        }
+                        else
+                        {
+                                unlink(fullpath);
+                        }
+                }
+        }
+        closedir(dir);
+        rmdir(path);
+}
+int main()
+{
+        delete_dir("temp");
+        return 0;
+}
+```
+## 36.Write a C program to read and display the first 10 lines of a file named "log.txt"?
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+int main()
+{
+        int fd;
+        fd=open("log.txt",O_RDONLY);
+        if(fd<0)
+        {
+                perror("open");
+                return 1;
+        }
+        char ch;
+        int line_count=0;
+        while(read(fd,&ch,1)>0&&line_count<10)
+        {
+                write(1,&ch,1);
+                if(ch=='\n')
+                        line_count++;
+        }
+        close(fd);
+        return 0;
+}
+```
+## 37.Write a C program to read and display the first 10 lines of a file named "log.txt"?
+```c
+#include<stdio.h>
+#include<unistd.h>
+#include<fcntl.h>
+int main()
+{
+        int fd;
+        fd=open("log.txt",O_RDONLY);
+        if(fd<0)
+        {
+                perror("open");
+                return 1;
+        }
+        char ch;
+        int line_count=0;
+        while(read(fd,&ch,1)>0&&line_count<10)
+        {
+                write(1,&ch,1);
+                if(ch=='\n')
+                        line_count++;
+        }
+        close(fd);
+        return 0;
+}
+```
+## 38.Develop a C program to read data from a text file named "input.txt" and write it to another file named "output.txt" in reverse order?
+```c
+#include<fcntl.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include<stdlib.h>
+#include<stdio.h>
+int main()
+{
+        int n=open("log.txt",O_RDONLY);
+        if(n<0)
+        {
+                perror("open log");
+                return 1;
+        }
+        struct stat st;
+        fstat(n,&st);
+        off_t size=st.st_size;
+        char *buffer=malloc(size);
+        read(n,buffer,size);
+        close(n);
+        int out=open("output.txt",O_CREAT|O_WRONLY|O_TRUNC,0644);
+        if(out<0)
+        {
+                perror("open output");
+                return 1;
+        }
+        for(int i=size-1;i>=0;i--)
+        {
+                write(out,&buffer[i],1);
+        }
+        close(out);
+        free(buffer);
+        return 0;
+}
+```
+## 39.Write a C program to read and display the contents of a binary file named "binary.bin"?
+```c
+#include<fcntl.h>
+#include<unistd.h>
+#include<string.h>
+#include<stdio.h>
+int main()
+{
+        int fd;
+        char buffer[1024];
+        ssize_t bytesread;
+        fd=open("binary.bin",O_RDONLY);
+        if(fd<0)
+        {
+                perror("open");
+                return 1;
+        }
+        while((bytesread=read(fd,buffer,sizeof(buffer)))>0)
+        {
+                write(1,buffer,bytesread);
+        }
+        if(bytesread<0)
+                perror("read");
+        close(fd);
+        return 0;
+}
+```
+## 40.Implement a C program to create a new directory named with the current date in the format "YYYY-MM-DD"?
+```c
+#include <time.h>
+#include <sys/stat.h>
+#include <stdio.h>
+
+int main() {
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    char dirname[20];
+
+    sprintf(dirname, "%04d-%02d-%02d", tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
+
+    if (mkdir(dirname, 0755) == -1) {
+        perror("mkdir");
+        return 1;
+    }
+
+    return 0;
+}
+```
+## 41.Develop a C program to get the size of the largest file in a directory.
+```c
+#include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <string.h>
+
+int main() {
+    DIR *dir = opendir(".");
+    if (!dir) {
+        perror("opendir");
+        return 1;
+    }
+
+    struct dirent *entry;
+    struct stat info;
+    char path[512];
+    off_t max_size = 0;
+
+    while ((entry = readdir(dir)) != NULL) {
+        snprintf(path, sizeof(path), "./%s", entry->d_name);
+        if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
+            if (info.st_size > max_size) {
+                max_size = info.st_size;
+            }
+        }
+    }
+
+    closedir(dir);
+    printf("Largest file size: %ld bytes\n", (long)max_size);
+    return 0;
+}
+```
+## 42.Write a C program to create a new directory named "Logs" and move all files with the ".log" extension into it.
+```c
+#include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
+
+int main() {
+    mkdir("Logs", 0755);
+
+    DIR *dir = opendir(".");
+    if (!dir) {
+        perror("opendir");
+        return 1;
+    }
+
+    struct dirent *entry;
+    char newpath[512];
+
+    while ((entry = readdir(dir)) != NULL) {
+        char *ext = strrchr(entry->d_name, '.');
+        if (ext && strcmp(ext, ".log") == 0) {
+            snprintf(newpath, sizeof(newpath), "Logs/%s", entry->d_name);
+            rename(entry->d_name, newpath);
+        }
+    }
+
+    closedir(dir);
+    return 0;
+}
+```
+## 43.Develop a C program to check if a file named "config.ini" is writable
+```c
+#include <unistd.h>
+#include <stdio.h>
+
+int main() {
+    if (access("config.ini", W_OK) == 0) {
+        write(1, "File is writable\n", 17);
+    } else {
+        perror("access");
+    }
+    return 0;
+}
+```
+## 44.Implement a C program to read the contents of a text file named "instructions.txt" and execute the instructions as shell commands?
+```c
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+    int fd = open("instructions.txt", O_RDONLY);
+    if (fd < 0) {
+        perror("open");
+        return 1;
+    }
+
+    char buf[1024];
+    ssize_t n = read(fd, buf, sizeof(buf) - 1);
+    close(fd);
+    if (n <= 0) return 0;
+
+    buf[n] = '\0';
+    char *cmd = strtok(buf, "\n");
+    while (cmd) {
+        system(cmd); // executes shell command
+        cmd = strtok(NULL, "\n");
+    }
+
+    return 0;
+}
+```
+## 45.Develop a C program to copy the contents of all text files in a directory into a single file named "combined.txt"?
+```c
+#include <fcntl.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <string.h>
+
+int main() {
+    int outfd = open("combined.txt", O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (outfd < 0) return 1;
+
+    DIR *dir = opendir(".");
+    struct dirent *entry;
+    char buf[1024];
+    ssize_t n;
+    char *ext;
+
+    while ((entry = readdir(dir)) != NULL) {
+        ext = strrchr(entry->d_name, '.');
+        if (ext && strcmp(ext, ".txt") == 0 && strcmp(entry->d_name, "combined.txt") != 0) {
+            int infd = open(entry->d_name, O_RDONLY);
+            if (infd >= 0) {
+                while ((n = read(infd, buf, sizeof(buf))) > 0) {
+                    write(outfd, buf, n);
+                }
+                close(infd);
+            }
+        }
+    }
+    closedir(dir);
+    close(outfd);
+    return 0;
+}
+```
+## 46.mplement a C program to append "Goodbye!" to the end of an existing file named "message.txt"?
+```c
