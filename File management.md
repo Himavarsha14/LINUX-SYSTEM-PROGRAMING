@@ -1179,5 +1179,3 @@ int main() {
     return 0;
 }
 ```
-## 46.mplement a C program to append "Goodbye!" to the end of an existing file named "message.txt"?
-```c
